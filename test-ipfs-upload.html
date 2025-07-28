@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPFS Upload Test - SolMeme Creator</title>
+    
+    <!-- Buffer Polyfill - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        window.Buffer = buffer.Buffer;
+        console.log('✅ Buffer polyfill loaded for IPFS test');
+    </script>
+    
+    <!-- IPFS Configuration -->
+    <script src="ipfs-config.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #007cba;
+        }
+        
+        .upload-area.dragover {
+            border-color: #007cba;
+            background: #f0f8ff;
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            background: #005a8b;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .log {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-ready {
+            background: #28a745;
+        }
+        
+        .status-error {
+            background: #dc3545;
+        }
+        
+        .status-pending {
+            background: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 IPFS Upload Function Test</h1>
+        <p>This test verifies that <code>window.ipfsInstance.uploadTokenImage</code> works correctly with the IPFS configuration.</p>
+        
+        <div class="result info">
+            <h3>📋 IPFS Service Status</h3>
+            <div id="ipfs-status">
+                <div>
+                    <span class="status-indicator status-pending"></span>
+                    Checking IPFS instance initialization...
+                </div>
+            </div>
+        </div>
+        
+        <div class="upload-area" id="upload-area">
+            <h3>📁 Drop an image file here or click to select</h3>
+            <p>Supports: PNG, JPG, GIF, WebP</p>
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+        </div>
+        
+        <div>
+            <button id="test-json-btn">🧪 Test JSON Upload</button>
+            <button id="create-test-image-btn">🎨 Create Test Image</button>
+            <button id="clear-log-btn">🧹 Clear Log</button>
+        </div>
+        
+        <div id="results"></div>
+        <div id="upload-log" class="log"></div>
+    </div>
+
+    <script>
+        class IPFSUploadTester {
+            constructor() {
+                this.logContainer = document.getElementById('upload-log');
+                this.resultsContainer = document.getElementById('results');
+                this.statusContainer = document.getElementById('ipfs-status');
+                this.uploadCounter = 0;
+                
+                this.initializeEventListeners();
+                this.checkIPFSStatus();
+            }
+            
+            initializeEventListeners() {
+                const uploadArea = document.getElementById('upload-area');
+                const fileInput = document.getElementById('file-input');
+                
+                // File upload area events
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.handleFileUpload(files[0]);
+                    }
+                });
+                
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.handleFileUpload(e.target.files[0]);
+                    }
+                });
+                
+                // Button events
+                document.getElementById('test-json-btn').addEventListener('click', () => {
+                    this.testJSONUpload();
+                });
+                
+                document.getElementById('create-test-image-btn').addEventListener('click', () => {
+                    this.createAndUploadTestImage();
+                });
+                
+                document.getElementById('clear-log-btn').addEventListener('click', () => {
+                    this.clearLog();
+                });
+            }
+            
+            async checkIPFSStatus() {
+                try {
+                    this.log('🔍 Checking IPFS instance status...');
+                    
+                    if (!window.ipfsInstance) {
+                        throw new Error('window.ipfsInstance is not available');
+                    }
+                    
+                    this.log('✅ window.ipfsInstance found');
+                    
+                    // Check if uploadTokenImage method exists
+                    if (typeof window.ipfsInstance.uploadTokenImage !== 'function') {
+                        throw new Error('uploadTokenImage method is not available');
+                    }
+                    
+                    this.log('✅ uploadTokenImage method is available');
+                    
+                    // Check if uploadTokenMetadata method exists
+                    if (typeof window.ipfsInstance.uploadTokenMetadata !== 'function') {
+                        throw new Error('uploadTokenMetadata method is not available');
+                    }
+                    
+                    this.log('✅ uploadTokenMetadata method is available');
+                    
+                    // Try to initialize the IPFS instance
+                    await window.ipfsInstance.initialize();
+                    this.log('✅ IPFS instance initialized successfully');
+                    
+                    this.updateStatus('✅ IPFS Ready', 'status-ready');
+                    
+                } catch (error) {
+                    this.log(`❌ IPFS Status Error: ${error.message}`);
+                    this.updateStatus(`❌ IPFS Error: ${error.message}`, 'status-error');
+                }
+            }
+            
+            updateStatus(message, statusClass) {
+                this.statusContainer.innerHTML = `
+                    <div>
+                        <span class="status-indicator ${statusClass}"></span>
+                        ${message}
+                    </div>
+                `;
+            }
+            
+            async handleFileUpload(file) {
+                try {
+                    this.log(`📁 Selected file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+                    
+                    if (!file.type.startsWith('image/')) {
+                        throw new Error('Please select an image file');
+                    }
+                    
+                    this.uploadCounter++;
+                    const uploadId = `upload_${this.uploadCounter}`;
+                    
+                    this.log(`🚀 Starting IPFS upload #${this.uploadCounter}...`);
+                    this.addResult(`Upload #${this.uploadCounter} started...`, 'info');
+                    
+                    // Test the uploadTokenImage function
+                    const result = await window.ipfsInstance.uploadTokenImage(file, `test_token_${Date.now()}`);
+                    
+                    this.log(`✅ Upload successful!`);
+                    this.log(`📍 IPFS Hash: ${result.ipfsHash}`);
+                    this.log(`🌐 Gateway URL: ${result.gatewayUrl}`);
+                    this.log(`🔗 Public URL: ${result.publicUrl}`);
+                    this.log(`🔧 Service Used: ${result.service}`);
+                    
+                    this.addResult(`
+                        <strong>✅ Upload #${this.uploadCounter} Successful</strong><br>
+                        <strong>File:</strong> ${file.name}<br>
+                        <strong>IPFS Hash:</strong> ${result.ipfsHash}<br>
+                        <strong>Gateway URL:</strong> <a href="${result.gatewayUrl}" target="_blank">${result.gatewayUrl}</a><br>
+                        <strong>Public URL:</strong> <a href="${result.publicUrl}" target="_blank">${result.publicUrl}</a><br>
+                        <strong>Service:</strong> ${result.service}
+                    `, 'success');
+                    
+                    // Test verification if available
+                    if (window.ipfsInstance.verifyCompleteUpload) {
+                        this.log(`🔍 Testing upload verification...`);
+                        const verification = await window.ipfsInstance.uploader.verifyIPFSUpload(result.ipfsHash);
+                        this.log(`📊 Verification score: ${verification.verificationScore.toFixed(1)}%`);
+                        this.log(`✅ Accessible gateways: ${verification.accessibleGateways.length}/${verification.totalGateways}`);
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Upload failed: ${error.message}`);
+                    this.addResult(`
+                        <strong>❌ Upload #${this.uploadCounter} Failed</strong><br>
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>File:</strong> ${file.name}
+                    `, 'error');
+                    
+                    // Show upload stats if available
+                    if (window.ipfsInstance.getLastUploadStats) {
+                        const stats = window.ipfsInstance.getLastUploadStats();
+                        if (stats && stats.attempts.length > 0) {
+                            this.log(`📊 Upload attempts made: ${stats.totalAttempts}`);
+                            stats.attempts.forEach((attempt, index) => {
+                                this.log(`   ${index + 1}. ${attempt.service}: ${attempt.error}`);
+                            });
+                        }
+                    }
+                }
+            }
+            
+            async testJSONUpload() {
+                try {
+                    this.uploadCounter++;
+                    this.log(`🧪 Testing JSON metadata upload #${this.uploadCounter}...`);
+                    
+                    const testMetadata = {
+                        name: `Test Token ${Date.now()}`,
+                        symbol: `TEST${this.uploadCounter}`,
+                        description: 'This is a test metadata upload for IPFS functionality testing',
+                        attributes: [
+                            { trait_type: 'Test Type', value: 'JSON Upload' },
+                            { trait_type: 'Upload Number', value: this.uploadCounter.toString() },
+                            { trait_type: 'Timestamp', value: new Date().toISOString() }
+                        ]
+                    };
+                    
+                    this.addResult(`JSON Upload #${this.uploadCounter} started...`, 'info');
+                    
+                    const result = await window.ipfsInstance.uploadTokenMetadata(testMetadata);
+                    
+                    this.log(`✅ JSON upload successful!`);
+                    this.log(`📍 IPFS Hash: ${result.ipfsHash}`);
+                    this.log(`🌐 Gateway URL: ${result.gatewayUrl}`);
+                    this.log(`🔗 Public URL: ${result.publicUrl}`);
+                    this.log(`🔧 Service Used: ${result.service}`);
+                    
+                    this.addResult(`
+                        <strong>✅ JSON Upload #${this.uploadCounter} Successful</strong><br>
+                        <strong>IPFS Hash:</strong> ${result.ipfsHash}<br>
+                        <strong>Gateway URL:</strong> <a href="${result.gatewayUrl}" target="_blank">${result.gatewayUrl}</a><br>
+                        <strong>Public URL:</strong> <a href="${result.publicUrl}" target="_blank">${result.publicUrl}</a><br>
+                        <strong>Service:</strong> ${result.service}<br>
+                        <strong>Metadata:</strong> ${JSON.stringify(result.metadata, null, 2)}
+                    `, 'success');
+                    
+                } catch (error) {
+                    this.log(`❌ JSON upload failed: ${error.message}`);
+                    this.addResult(`
+                        <strong>❌ JSON Upload #${this.uploadCounter} Failed</strong><br>
+                        <strong>Error:</strong> ${error.message}
+                    `, 'error');
+                }
+            }
+            
+            async createAndUploadTestImage() {
+                try {
+                    this.log(`🎨 Creating test image...`);
+                    
+                    // Create a canvas and draw a test image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 400;
+                    canvas.height = 400;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw a gradient background
+                    const gradient = ctx.createLinearGradient(0, 0, 400, 400);
+                    gradient.addColorStop(0, '#667eea');
+                    gradient.addColorStop(1, '#764ba2');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, 400, 400);
+                    
+                    // Draw text
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 32px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('IPFS TEST', 200, 150);
+                    ctx.font = '20px Arial';
+                    ctx.fillText(`Upload #${this.uploadCounter + 1}`, 200, 200);
+                    ctx.fillText(new Date().toLocaleTimeString(), 200, 250);
+                    
+                    // Draw a circle
+                    ctx.beginPath();
+                    ctx.arc(200, 320, 30, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#00d4aa';
+                    ctx.fill();
+                    
+                    this.log(`✅ Test image created (400x400 PNG)`);
+                    
+                    // Convert canvas to blob
+                    canvas.toBlob(async (blob) => {
+                        if (blob) {
+                            blob.name = `test_image_${Date.now()}.png`;
+                            await this.handleFileUpload(blob);
+                        }
+                    }, 'image/png');
+                    
+                } catch (error) {
+                    this.log(`❌ Failed to create test image: ${error.message}`);
+                    this.addResult(`❌ Test image creation failed: ${error.message}`, 'error');
+                }
+            }
+            
+            addResult(content, type) {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `result ${type}`;
+                resultDiv.innerHTML = content;
+                this.resultsContainer.appendChild(resultDiv);
+                resultDiv.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                console.log(logEntry);
+                
+                const logDiv = document.createElement('div');
+                logDiv.textContent = logEntry;
+                this.logContainer.appendChild(logDiv);
+                this.logContainer.scrollTop = this.logContainer.scrollHeight;
+            }
+            
+            clearLog() {
+                this.logContainer.innerHTML = '';
+                this.resultsContainer.innerHTML = '';
+                this.log('🧹 Log cleared');
+            }
+        }
+        
+        // Initialize the tester when the page loads
+        window.addEventListener('load', () => {
+            console.log('🧪 IPFS Upload Tester initializing...');
+            new IPFSUploadTester();
+        });
+    </script>
+</body>
+</html>

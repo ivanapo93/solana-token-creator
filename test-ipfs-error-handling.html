@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPFS Error Handling Test - SolMeme Creator</title>
+    
+    <!-- Buffer Polyfill - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        window.Buffer = buffer.Buffer;
+        console.log('✅ Buffer polyfill loaded for IPFS test');
+    </script>
+    
+    <!-- IPFS Configuration -->
+    <script src="ipfs-config.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .panel {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            transition: border-color 0.3s;
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            background: #005a8b;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .log {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 IPFS Error Handling Test</h1>
+        <p>This page tests the enhanced error handling and fallback mechanisms for IPFS uploads.</p>
+        
+        <div class="panel">
+            <h2>🔍 Test Configuration</h2>
+            <div class="test-controls">
+                <button id="test-normal-flow">✅ Test Normal Flow</button>
+                <button id="test-bad-url">❌ Test Bad URL</button>
+                <button id="test-empty-image">❌ Test Empty Image</button>
+                <button id="test-corrupt-image">❌ Test Corrupt Image</button>
+                <button id="test-pinata-failure">❌ Test Pinata Failure</button>
+                <button id="test-all-services-failure">❌ Test All Services Failure</button>
+                <button id="test-fallback-logo">⚠️ Test Fallback Logo</button>
+                <button id="test-fallback-metadata">⚠️ Test Fallback Metadata</button>
+            </div>
+            <div class="card">
+                <div class="card-header">Token Data Configuration</div>
+                <div>
+                    <pre id="token-data-json">{
+    "name": "Test Token",
+    "symbol": "TEST",
+    "description": "A test token for IPFS error handling",
+    "supply": 1000000000,
+    "decimals": 9,
+    "logoUrl": "https://ipfs.io/ipfs/QmPbxeGcXhYQQNgsC6a36dDyYUcHgMLnGKnF8pVFmGsvqi"
+}</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div id="results"></div>
+        <div id="test-log" class="log"></div>
+    </div>
+
+    <script>
+        class IPFSErrorTest {
+            constructor() {
+                this.logEl = document.getElementById('test-log');
+                this.resultsEl = document.getElementById('results');
+                this.tokenDataEl = document.getElementById('token-data-json');
+                
+                this.initButtons();
+                this.log('🔧 IPFS Error Handling Test initialized');
+                this.checkIPFSStatus();
+            }
+            
+            initButtons() {
+                document.getElementById('test-normal-flow').addEventListener('click', () => this.testNormalFlow());
+                document.getElementById('test-bad-url').addEventListener('click', () => this.testBadUrl());
+                document.getElementById('test-empty-image').addEventListener('click', () => this.testEmptyImage());
+                document.getElementById('test-corrupt-image').addEventListener('click', () => this.testCorruptImage());
+                document.getElementById('test-pinata-failure').addEventListener('click', () => this.testPinataFailure());
+                document.getElementById('test-all-services-failure').addEventListener('click', () => this.testAllServicesFailure());
+                document.getElementById('test-fallback-logo').addEventListener('click', () => this.testFallbackLogo());
+                document.getElementById('test-fallback-metadata').addEventListener('click', () => this.testFallbackMetadata());
+            }
+            
+            async checkIPFSStatus() {
+                try {
+                    this.log('🔍 Checking IPFS instance status...');
+                    
+                    if (!window.ipfsInstance) {
+                        throw new Error('window.ipfsInstance is not available');
+                    }
+                    
+                    this.log('✅ window.ipfsInstance found');
+                    
+                    // Initialize IPFS instance
+                    await window.ipfsInstance.initialize();
+                    this.log('✅ IPFS instance initialized successfully');
+                    
+                    this.addResult('IPFS Ready', 'success');
+                } catch (error) {
+                    this.log(`❌ IPFS Status Error: ${error.message}`);
+                    this.addResult(`IPFS Error: ${error.message}`, 'error');
+                }
+            }
+            
+            getTokenData() {
+                try {
+                    return JSON.parse(this.tokenDataEl.textContent);
+                } catch (e) {
+                    this.log('❌ Error parsing token data JSON');
+                    throw new Error('Invalid token data JSON');
+                }
+            }
+            
+            async testNormalFlow() {
+                this.log('🧪 Testing normal IPFS upload flow...');
+                this.addResult('Testing normal flow...', 'info');
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // 1. Upload logo to IPFS
+                    this.log('📤 Step 1: Uploading logo to IPFS...');
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    this.log(`✅ Logo uploaded successfully: ${logoResult.ipfsHash}`);
+                    
+                    // 2. Create and upload metadata
+                    this.log('📋 Step 2: Creating and uploading metadata...');
+                    const metadataResult = await this.createAndUploadMetadata(tokenData, logoResult);
+                    this.log(`✅ Metadata uploaded successfully: ${metadataResult.ipfsHash}`);
+                    
+                    // 3. Verify uploads
+                    if (logoResult.ipfsHash && metadataResult.ipfsHash) {
+                        this.log('🔍 Step 3: Verifying uploads...');
+                        try {
+                            const verification = await window.ipfsInstance.verifyCompleteUpload(
+                                logoResult.ipfsHash,
+                                metadataResult.ipfsHash
+                            );
+                            
+                            this.log(`✅ Verification complete: ${verification.overallScore.toFixed(1)}% accessibility`);
+                            this.addResult(`
+                                <h3>✅ Normal Flow Successful</h3>
+                                <p><strong>Logo:</strong> ${logoResult.ipfsHash}</p>
+                                <p><strong>Metadata:</strong> ${metadataResult.ipfsHash}</p>
+                                <p><strong>Verification Score:</strong> ${verification.overallScore.toFixed(1)}%</p>
+                                <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                            `, 'success');
+                        } catch (verifyError) {
+                            this.log(`⚠️ Verification failed: ${verifyError.message}`);
+                            this.addResult(`
+                                <h3>⚠️ Normal Flow Partially Successful</h3>
+                                <p><strong>Logo:</strong> ${logoResult.ipfsHash}</p>
+                                <p><strong>Metadata:</strong> ${metadataResult.ipfsHash}</p>
+                                <p><strong>Verification:</strong> Failed - ${verifyError.message}</p>
+                                <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                            `, 'info');
+                        }
+                    } else {
+                        this.addResult(`
+                            <h3>⚠️ Normal Flow Partially Successful</h3>
+                            <p><strong>Logo:</strong> ${logoResult.ipfsHash || 'N/A'}</p>
+                            <p><strong>Metadata:</strong> ${metadataResult.ipfsHash || 'N/A'}</p>
+                            <p><strong>Note:</strong> Missing IPFS hashes, verification skipped</p>
+                        `, 'info');
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Normal flow test failed: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Normal Flow Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    `, 'error');
+                }
+            }
+            
+            async testBadUrl() {
+                this.log('🧪 Testing bad URL scenario...');
+                this.addResult('Testing bad URL...', 'info');
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // Change to a bad URL
+                    tokenData.logoUrl = 'https://nonexistent-domain-that-will-fail.xyz/image.png';
+                    
+                    // Try to upload logo
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    this.log(`✅ Upload with bad URL handled successfully. Used fallback: ${logoResult.isFallback ? 'Yes' : 'No'}`);
+                    this.addResult(`
+                        <h3>${logoResult.isFallback ? '⚠️ Bad URL Test: Fallback Used' : '✅ Bad URL Test: Alternate Method Used'}</h3>
+                        <p><strong>Result:</strong> ${logoResult.isFallback ? 'Fallback logo generated' : 'Logo uploaded via alternate method'}</p>
+                        <p><strong>Service:</strong> ${logoResult.service}</p>
+                        <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                    `, logoResult.isFallback ? 'info' : 'success');
+                    
+                } catch (error) {
+                    this.log(`❌ Bad URL test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Bad URL Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Note:</strong> This should have been handled by the fallback mechanism</p>
+                    `, 'error');
+                }
+            }
+            
+            async testEmptyImage() {
+                this.log('🧪 Testing empty image scenario...');
+                this.addResult('Testing empty image...', 'info');
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // Create empty blob
+                    const emptyBlob = new Blob([], { type: 'image/png' });
+                    
+                    // Mock the fetch to return empty blob
+                    const originalFetch = window.fetch;
+                    window.fetch = async () => {
+                        return {
+                            ok: true,
+                            blob: async () => emptyBlob
+                        };
+                    };
+                    
+                    // Try to upload empty image
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    // Restore original fetch
+                    window.fetch = originalFetch;
+                    
+                    this.log(`✅ Empty image handled successfully. Used fallback: ${logoResult.isFallback ? 'Yes' : 'No'}`);
+                    this.addResult(`
+                        <h3>${logoResult.isFallback ? '⚠️ Empty Image Test: Fallback Used' : '✅ Empty Image Test: Handled'}</h3>
+                        <p><strong>Result:</strong> ${logoResult.isFallback ? 'Fallback logo generated' : 'Empty image handled'}</p>
+                        <p><strong>Service:</strong> ${logoResult.service}</p>
+                        <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                    `, logoResult.isFallback ? 'info' : 'success');
+                    
+                } catch (error) {
+                    this.log(`❌ Empty image test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Empty Image Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Note:</strong> This should have been handled by the fallback mechanism</p>
+                    `, 'error');
+                }
+                
+                // Restore original fetch if needed
+                if (window.fetch.toString().includes('emptyBlob')) {
+                    window.fetch = window.originalFetch;
+                }
+            }
+            
+            async testCorruptImage() {
+                this.log('🧪 Testing corrupt image scenario...');
+                this.addResult('Testing corrupt image...', 'info');
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // Create corrupt blob (not a valid image)
+                    const corruptData = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00]);
+                    const corruptBlob = new Blob([corruptData], { type: 'image/png' });
+                    
+                    // Mock the fetch to return corrupt blob
+                    const originalFetch = window.fetch;
+                    window.fetch = async () => {
+                        return {
+                            ok: true,
+                            blob: async () => corruptBlob
+                        };
+                    };
+                    
+                    // Try to upload corrupt image
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    // Restore original fetch
+                    window.fetch = originalFetch;
+                    
+                    this.log(`✅ Corrupt image handled successfully. Used fallback: ${logoResult.isFallback ? 'Yes' : 'No'}`);
+                    this.addResult(`
+                        <h3>${logoResult.isFallback ? '⚠️ Corrupt Image Test: Fallback Used' : '✅ Corrupt Image Test: Handled'}</h3>
+                        <p><strong>Result:</strong> ${logoResult.isFallback ? 'Fallback logo generated' : 'Corrupt image handled'}</p>
+                        <p><strong>Service:</strong> ${logoResult.service}</p>
+                        <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                    `, logoResult.isFallback ? 'info' : 'success');
+                    
+                } catch (error) {
+                    this.log(`❌ Corrupt image test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Corrupt Image Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Note:</strong> This should have been handled by the fallback mechanism</p>
+                    `, 'error');
+                }
+                
+                // Restore original fetch if needed
+                if (window.fetch.toString().includes('corruptBlob')) {
+                    window.fetch = window.originalFetch;
+                }
+            }
+            
+            async testPinataFailure() {
+                this.log('🧪 Testing Pinata failure scenario...');
+                this.addResult('Testing Pinata failure...', 'info');
+                
+                // Save original uploadToPinata method
+                const originalUploadToPinata = window.ipfsInstance.uploader.uploadToPinata;
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // Mock Pinata to fail
+                    window.ipfsInstance.uploader.uploadToPinata = async () => {
+                        throw new Error('Simulated Pinata failure');
+                    };
+                    
+                    // Try to upload with Pinata failing
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    this.log(`✅ Pinata failure handled successfully. Used service: ${logoResult.service}`);
+                    this.addResult(`
+                        <h3>✅ Pinata Failure Test: Fallback Used</h3>
+                        <p><strong>Result:</strong> Upload succeeded with fallback service</p>
+                        <p><strong>Service:</strong> ${logoResult.service}</p>
+                        <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                    `, 'success');
+                    
+                } catch (error) {
+                    this.log(`❌ Pinata failure test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Pinata Failure Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Note:</strong> This should have been handled by the fallback services</p>
+                    `, 'error');
+                } finally {
+                    // Restore original method
+                    window.ipfsInstance.uploader.uploadToPinata = originalUploadToPinata;
+                }
+            }
+            
+            async testAllServicesFailure() {
+                this.log('🧪 Testing all services failure scenario...');
+                this.addResult('Testing all services failure...', 'info');
+                
+                // Save original methods
+                const originalUploadToPinata = window.ipfsInstance.uploader.uploadToPinata;
+                const originalUploadToNFTStorage = window.ipfsInstance.uploader.uploadToNFTStorage;
+                const originalUploadToWeb3Storage = window.ipfsInstance.uploader.uploadToWeb3Storage;
+                const originalUploadToStoracha = window.ipfsInstance.uploader.uploadToStoracha;
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // Mock all services to fail
+                    const mockFailure = async () => {
+                        throw new Error('Simulated service failure');
+                    };
+                    
+                    window.ipfsInstance.uploader.uploadToPinata = mockFailure;
+                    window.ipfsInstance.uploader.uploadToNFTStorage = mockFailure;
+                    window.ipfsInstance.uploader.uploadToWeb3Storage = mockFailure;
+                    window.ipfsInstance.uploader.uploadToStoracha = mockFailure;
+                    
+                    // Try to upload with all services failing
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    this.log(`✅ All services failure handled successfully. Used fallback: ${logoResult.isFallback ? 'Yes' : 'No'}`);
+                    this.addResult(`
+                        <h3>${logoResult.isFallback ? '⚠️ All Services Failure: Local Fallback Used' : '✅ All Services Failure: Handled'}</h3>
+                        <p><strong>Result:</strong> ${logoResult.isFallback ? 'Local fallback logo generated' : 'Handled through alternate means'}</p>
+                        <p><strong>Service:</strong> ${logoResult.service}</p>
+                        <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                    `, logoResult.isFallback ? 'info' : 'success');
+                    
+                } catch (error) {
+                    this.log(`❌ All services failure test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ All Services Failure Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Note:</strong> This should have been handled by the local fallback mechanism</p>
+                    `, 'error');
+                } finally {
+                    // Restore original methods
+                    window.ipfsInstance.uploader.uploadToPinata = originalUploadToPinata;
+                    window.ipfsInstance.uploader.uploadToNFTStorage = originalUploadToNFTStorage;
+                    window.ipfsInstance.uploader.uploadToWeb3Storage = originalUploadToWeb3Storage;
+                    window.ipfsInstance.uploader.uploadToStoracha = originalUploadToStoracha;
+                }
+            }
+            
+            async testFallbackLogo() {
+                this.log('🧪 Testing fallback logo generation...');
+                this.addResult('Testing fallback logo...', 'info');
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // Remove logoUrl to force fallback generation
+                    delete tokenData.logoUrl;
+                    
+                    // Force all upload services to fail
+                    const originalUploadFile = window.ipfsInstance.uploader.uploadFile;
+                    window.ipfsInstance.uploader.uploadFile = async () => {
+                        throw new Error('Simulated complete service failure');
+                    };
+                    
+                    // Try to upload, should generate fallback
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    // Restore original method
+                    window.ipfsInstance.uploader.uploadFile = originalUploadFile;
+                    
+                    this.log(`✅ Fallback logo generation: ${logoResult.isFallback ? 'Used fallback' : 'Did not use fallback'}`);
+                    this.addResult(`
+                        <h3>${logoResult.isFallback ? '✅ Fallback Logo Test: Success' : '⚠️ Fallback Logo Test: Not Used'}</h3>
+                        <p><strong>Result:</strong> ${logoResult.isFallback ? 'Fallback logo generated correctly' : 'System used another method'}</p>
+                        <p><strong>Service:</strong> ${logoResult.service}</p>
+                        <p><img src="${logoResult.gatewayUrl}" alt="Token Logo" style="max-width: 100px; max-height: 100px;"></p>
+                    `, logoResult.isFallback ? 'success' : 'info');
+                    
+                } catch (error) {
+                    this.log(`❌ Fallback logo test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Fallback Logo Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    `, 'error');
+                }
+            }
+            
+            async testFallbackMetadata() {
+                this.log('🧪 Testing fallback metadata generation...');
+                this.addResult('Testing fallback metadata...', 'info');
+                
+                try {
+                    const tokenData = this.getTokenData();
+                    
+                    // First get a logo (normal or fallback)
+                    const logoResult = await this.uploadLogoToIPFS(tokenData);
+                    
+                    // Force metadata upload to fail
+                    const originalUploadJSON = window.ipfsInstance.uploader.uploadJSON;
+                    window.ipfsInstance.uploader.uploadJSON = async () => {
+                        throw new Error('Simulated metadata upload failure');
+                    };
+                    
+                    // Try to create and upload metadata
+                    const metadataResult = await this.createAndUploadMetadata(tokenData, logoResult);
+                    
+                    // Restore original method
+                    window.ipfsInstance.uploader.uploadJSON = originalUploadJSON;
+                    
+                    this.log(`✅ Fallback metadata generation: ${metadataResult.isFallback ? 'Used fallback' : 'Did not use fallback'}`);
+                    this.addResult(`
+                        <h3>${metadataResult.isFallback ? '✅ Fallback Metadata Test: Success' : '⚠️ Fallback Metadata Test: Not Used'}</h3>
+                        <p><strong>Result:</strong> ${metadataResult.isFallback ? 'Fallback metadata generated correctly' : 'System used another method'}</p>
+                        <p><strong>Service:</strong> ${metadataResult.service}</p>
+                        <p><strong>Metadata:</strong></p>
+                        <pre>${JSON.stringify(metadataResult.metadata, null, 2)}</pre>
+                    `, metadataResult.isFallback ? 'success' : 'info');
+                    
+                } catch (error) {
+                    this.log(`❌ Fallback metadata test failed unexpectedly: ${error.message}`);
+                    this.addResult(`
+                        <h3>❌ Fallback Metadata Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    `, 'error');
+                }
+            }
+            
+            // Implementation of the uploadLogoToIPFS function from index-mainnet.js
+            async uploadLogoToIPFS(tokenData) {
+                try {
+                    this.log('📤 Uploading logo to IPFS...');
+                    
+                    // Attempt counter for retry logic
+                    let attempts = 0;
+                    const maxAttempts = 3;
+                    let lastError = null;
+                    
+                    // Function to try upload with exponential backoff
+                    const attemptUpload = async () => {
+                        try {
+                            attempts++;
+                            this.log(`📤 IPFS upload attempt ${attempts}/${maxAttempts}...`);
+                            
+                            if (tokenData.logoUrl) {
+                                this.log('🖼️ Using provided logo URL...');
+                                const response = await fetch(tokenData.logoUrl);
+                                if (!response.ok) {
+                                    throw new Error(`Failed to fetch logo: ${response.status}`);
+                                }
+                                const blob = await response.blob();
+                                
+                                // Validate blob before upload
+                                if (!blob || blob.size === 0) {
+                                    throw new Error('Invalid logo file: Empty or corrupted image');
+                                }
+                                
+                                // Check file type
+                                const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+                                if (!validTypes.includes(blob.type)) {
+                                    this.log(`⚠️ Unusual image type: ${blob.type}. Proceeding anyway...`);
+                                }
+                                
+                                this.log(`📊 Logo size: ${(blob.size / 1024).toFixed(1)} KB`);
+                                return await window.ipfsInstance.uploadTokenImage(blob, tokenData.symbol);
+                            } else {
+                                this.log('🎨 Generating AI logo for Dexscreener...');
+                                
+                                // Create a canvas for the "AI" logo
+                                const canvas = document.createElement('canvas');
+                                canvas.width = 200;
+                                canvas.height = 200;
+                                const ctx = canvas.getContext('2d');
+                                
+                                // Draw a gradient background
+                                const gradient = ctx.createLinearGradient(0, 0, 200, 200);
+                                gradient.addColorStop(0, '#667eea');
+                                gradient.addColorStop(1, '#764ba2');
+                                ctx.fillStyle = gradient;
+                                ctx.fillRect(0, 0, 200, 200);
+                                
+                                // Draw text
+                                ctx.fillStyle = 'white';
+                                ctx.font = 'bold 48px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(tokenData.symbol, 100, 100);
+                                
+                                // Convert to blob
+                                const logoBlob = await new Promise(resolve => {
+                                    canvas.toBlob(resolve, 'image/png');
+                                });
+                                
+                                // Validate generated blob
+                                if (!logoBlob || logoBlob.size === 0) {
+                                    throw new Error('Failed to generate valid logo image');
+                                }
+                                
+                                this.log(`📊 Generated logo size: ${(logoBlob.size / 1024).toFixed(1)} KB`);
+                                return await window.ipfsInstance.uploadTokenImage(logoBlob, tokenData.symbol);
+                            }
+                        } catch (error) {
+                            this.log(`❌ Upload attempt ${attempts} failed: ${error.message}`);
+                            lastError = error;
+                            
+                            // If we haven't reached max attempts, retry with exponential backoff
+                            if (attempts < maxAttempts) {
+                                const delay = Math.pow(2, attempts) * 1000; // Exponential backoff: 2s, 4s, 8s...
+                                this.log(`⏳ Retrying in ${delay/1000}s...`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                return await attemptUpload(); // Recursive retry
+                            } else {
+                                // Max attempts reached, throw the error
+                                throw error;
+                            }
+                        }
+                    };
+                    
+                    // Start upload attempt flow
+                    return await attemptUpload();
+                    
+                } catch (error) {
+                    this.log(`💥 Logo upload failed after all attempts: ${error.message}`);
+                    
+                    // Check if IPFS instance has upload stats
+                    if (window.ipfsInstance && window.ipfsInstance.getLastUploadStats) {
+                        const stats = window.ipfsInstance.getLastUploadStats();
+                        if (stats) {
+                            this.log(`📊 Upload attempt details: ${JSON.stringify(stats)}`);
+                        }
+                    }
+                    
+                    // Generate a fallback local image as last resort
+                    try {
+                        this.log('🔄 Creating local fallback image...');
+                        
+                        // Create a canvas for the fallback logo
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 200;
+                        canvas.height = 200;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Generate a color based on the token symbol
+                        const getHashColor = (text) => {
+                            let hash = 0;
+                            for (let i = 0; i < text.length; i++) {
+                                hash = text.charCodeAt(i) + ((hash << 5) - hash);
+                            }
+                            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+                            return '#' + '00000'.substring(0, 6 - c.length) + c;
+                        };
+                        
+                        // Fill background with token-specific color
+                        const bgColor = getHashColor(tokenData.symbol);
+                        ctx.fillStyle = bgColor;
+                        ctx.fillRect(0, 0, 200, 200);
+                        
+                        // Add token symbol
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.font = 'bold 60px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(tokenData.symbol.substring(0, 4), 100, 100);
+                        
+                        // Convert to data URL
+                        const dataUrl = canvas.toDataURL('image/png');
+                        
+                        this.log('✅ Using fallback local image for metadata');
+                        
+                        // Return a special object indicating we're using a fallback
+                        return {
+                            ipfsHash: null,
+                            gatewayUrl: dataUrl,
+                            publicUrl: dataUrl,
+                            service: 'local-fallback',
+                            isFallback: true
+                        };
+                    } catch (fallbackError) {
+                        this.log(`💥 Even fallback image generation failed: ${fallbackError.message}`);
+                        throw new Error(`Logo upload failed completely: ${error.message}. This will affect Dexscreener visibility.`);
+                    }
+                }
+            }
+            
+            // Implementation of the createAndUploadMetadata function from index-mainnet.js
+            async createAndUploadMetadata(tokenData, logoResult) {
+                try {
+                    this.log('📋 Creating Dexscreener-optimized Metaplex metadata...');
+                    
+                    // Handle fallback logo scenario
+                    if (logoResult && logoResult.isFallback) {
+                        this.log('ℹ️ Using fallback logo for metadata - this may affect Dexscreener rating');
+                        
+                        // Create enhanced token metadata with fallback image
+                        // We'll create metadata manually since we're using a local fallback image
+                        const metadata = {
+                            name: tokenData.name,
+                            symbol: tokenData.symbol,
+                            description: tokenData.description || `${tokenData.name} (${tokenData.symbol}) - A Solana token created for decentralized trading`,
+                            image: logoResult.gatewayUrl, // This will be a data URL for fallback images
+                            external_url: tokenData.website || '',
+                            attributes: [
+                                { trait_type: 'Network', value: 'Solana' },
+                                { trait_type: 'Standard', value: 'SPL Token' },
+                                { trait_type: 'Supply', value: tokenData.supply?.toString() || '1000000000' },
+                                { trait_type: 'Decimals', value: (tokenData.decimals || 9).toString() },
+                                { trait_type: 'Created', value: new Date().toISOString().split('T')[0] }
+                            ],
+                            properties: {
+                                files: [{
+                                    uri: logoResult.gatewayUrl,
+                                    type: 'image/png',
+                                    cdn: false
+                                }],
+                                category: 'image'
+                            }
+                        };
+                        
+                        // Add social links if available
+                        const socialLinks = {};
+                        if (tokenData.website) socialLinks.website = tokenData.website;
+                        if (tokenData.twitter) socialLinks.twitter = tokenData.twitter;
+                        if (tokenData.telegram) socialLinks.telegram = tokenData.telegram;
+                        if (tokenData.discord) socialLinks.discord = tokenData.discord;
+                        
+                        // Try to upload metadata to IPFS with retries
+                        let attempts = 0;
+                        const maxAttempts = 3;
+                        let lastError = null;
+                        
+                        while (attempts < maxAttempts) {
+                            try {
+                                attempts++;
+                                this.log(`📤 Metadata upload attempt ${attempts}/${maxAttempts}...`);
+                                
+                                // Try to upload metadata to IPFS
+                                const metadataResult = await window.ipfsInstance.uploadTokenMetadata(tokenData, logoResult);
+                                
+                                this.log('✅ Metadata uploaded to IPFS successfully');
+                                return metadataResult;
+                                
+                            } catch (uploadError) {
+                                this.log(`❌ Metadata upload attempt ${attempts} failed: ${uploadError.message}`);
+                                lastError = uploadError;
+                                
+                                if (attempts < maxAttempts) {
+                                    const delay = Math.pow(2, attempts) * 1000;
+                                    this.log(`⏳ Retrying metadata upload in ${delay/1000}s...`);
+                                    await new Promise(resolve => setTimeout(resolve, delay));
+                                }
+                            }
+                        }
+                        
+                        // If all IPFS attempts fail, create a local metadata object as last resort
+                        this.log('⚠️ All IPFS metadata upload attempts failed, using local metadata');
+                        
+                        // Return a local metadata result with the fallback logo
+                        return {
+                            ipfsHash: null,
+                            gatewayUrl: 'local://metadata.json',
+                            publicUrl: 'local://metadata.json',
+                            service: 'local-fallback',
+                            isFallback: true,
+                            metadata
+                        };
+                        
+                    } else {
+                        // Normal flow with successful IPFS logo upload
+                        // Use the enhanced metadata creator for optimal Dexscreener compatibility
+                        const metadataResult = await window.ipfsInstance.uploadTokenMetadata(tokenData, logoResult);
+                        
+                        this.log('✅ Dexscreener-optimized metadata uploaded to IPFS');
+                        this.log('🎯 Metadata includes all required fields for ⚡100/⚡200 ratings');
+                        
+                        // Verify both logo and metadata are accessible
+                        if (logoResult && logoResult.ipfsHash && metadataResult.ipfsHash) {
+                            try {
+                                const verification = await window.ipfsInstance.verifyCompleteUpload(
+                                    logoResult.ipfsHash, 
+                                    metadataResult.ipfsHash
+                                );
+                                
+                                if (!verification.ready) {
+                                    this.log('⚠️ IPFS verification warning: Low accessibility score may affect Dexscreener indexing');
+                                } else {
+                                    this.log('✅ IPFS verification passed: Excellent accessibility for Dexscreener');
+                                }
+                            } catch (verifyError) {
+                                this.log(`⚠️ IPFS verification check failed: ${verifyError.message}`);
+                            }
+                        }
+                        
+                        return metadataResult;
+                    }
+                } catch (error) {
+                    this.log(`💥 Metadata creation/upload failed: ${error.message}`);
+                    
+                    // Create a basic fallback metadata as last resort
+                    try {
+                        this.log('🔄 Creating emergency fallback metadata...');
+                        
+                        // Basic metadata with minimal requirements
+                        const fallbackMetadata = {
+                            name: tokenData.name,
+                            symbol: tokenData.symbol,
+                            description: `${tokenData.name} (${tokenData.symbol}) - Solana token`,
+                            image: logoResult ? logoResult.gatewayUrl || logoResult.publicUrl : '',
+                            properties: {
+                                files: [],
+                                category: 'image'
+                            }
+                        };
+                        
+                        // Return local fallback
+                        return {
+                            ipfsHash: null,
+                            gatewayUrl: 'local://emergency-metadata.json',
+                            publicUrl: 'local://emergency-metadata.json',
+                            service: 'emergency-fallback',
+                            isFallback: true,
+                            metadata: fallbackMetadata
+                        };
+                    } catch (fallbackError) {
+                        throw new Error(`Complete metadata failure: ${error.message}. This will prevent Dexscreener listing.`);
+                    }
+                }
+            }
+            
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.textContent = `[${timestamp}] ${message}`;
+                this.logEl.appendChild(entry);
+                this.logEl.scrollTop = this.logEl.scrollHeight;
+                console.log(`[${timestamp}] ${message}`);
+            }
+            
+            addResult(content, type) {
+                const resultEl = document.createElement('div');
+                resultEl.className = `result ${type}`;
+                resultEl.innerHTML = content;
+                this.resultsEl.insertBefore(resultEl, this.resultsEl.firstChild);
+            }
+        }
+        
+        // Initialize the test suite when page loads
+        window.addEventListener('load', () => {
+            new IPFSErrorTest();
+        });
+    </script>
+</body>
+</html>

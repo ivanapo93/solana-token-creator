@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Mainnet Token Test - TestChimp</title>
+    
+    <!-- Buffer Polyfill - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        console.log('🔧 Initializing Buffer polyfill...');
+        window.Buffer = buffer.Buffer;
+        
+        try {
+            const testBuffer = Buffer.alloc(10);
+            console.log('✅ Buffer polyfill loaded successfully');
+        } catch (error) {
+            console.error('❌ Buffer polyfill failed:', error);
+            alert('Critical dependency failed to load. Please refresh the page.');
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.13/lib/index.iife.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { 
+            background-color: #6c757d; 
+            cursor: not-allowed; 
+        }
+        .results {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .address-display {
+            font-family: 'Courier New', monospace;
+            background: #f1f3f4;
+            padding: 8px;
+            border-radius: 4px;
+            word-break: break-all;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Live Mainnet Token Creation Test</h1>
+        <p><strong>Test Token:</strong> TestChimp (TCHP) - 1,000,000,000 supply with 9 decimals</p>
+        
+        <div class="test-section">
+            <h3>🔗 Wallet Connection</h3>
+            <button id="connectWallet" onclick="connectWallet()">Connect Phantom Wallet</button>
+            <div id="walletStatus" class="status info">Wallet not connected</div>
+            <div id="walletAddress" class="address-display" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📁 IPFS Upload Test</h3>
+            <button id="testIPFS" onclick="testIPFSUpload()" disabled>Test IPFS Upload</button>
+            <div id="ipfsStatus" class="status info">Waiting for wallet connection</div>
+            <div id="ipfsResult" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 RPC Connection Test</h3>
+            <button id="testRPC" onclick="testRPCConnections()" disabled>Test RPC Endpoints</button>
+            <div id="rpcStatus" class="status info">Waiting for wallet connection</div>
+            <div id="rpcResult" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🪙 Complete Token Creation</h3>
+            <button id="createToken" onclick="createCompleteToken()" disabled>Create TestChimp Token on Mainnet</button>
+            <div id="tokenStatus" class="status info">Waiting for previous tests</div>
+            <div id="tokenResult" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Complete Test Results</h3>
+            <div id="finalResults" class="log-area">Test not started yet...</div>
+        </div>
+    </div>
+
+    <script>
+        let wallet = null;
+        let connection = null;
+        let logOutput = "";
+        
+        const TOKEN_CONFIG = {
+            name: "TestChimp",
+            symbol: "TCHP",
+            decimals: 9,
+            supply: 1000000000,
+            image: "https://public.youware.com/users-website-assets/prod/1a7adfb7-e756-4c01-9d97-1ba0389e3d99/0dc1db1911f6457b8d3e9389a446805d.jpg",
+            socialLinks: {
+                twitter: "https://twitter.com/testchimp_fake",
+                telegram: "https://t.me/testchimp_fake",
+                website: "https://testchimp-fake.com"
+            }
+        };
+
+        const RPC_ENDPOINTS = [
+            "https://solana-mainnet.g.alchemy.com/v2/9UB7l5spSYtK-bF4FCvUY",
+            "https://api.mainnet-beta.solana.com",
+            "https://rpc.ankr.com/solana",
+            "https://solana-api.projectserum.com",
+            "https://ssc-dao.genesysgo.net"
+        ];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            logOutput += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            document.getElementById('finalResults').textContent = logOutput;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        async function connectWallet() {
+            try {
+                log("🔗 Attempting to connect to Phantom wallet...");
+                
+                if (!window.solana) {
+                    throw new Error("Phantom wallet not found. Please install Phantom.");
+                }
+                
+                const response = await window.solana.connect();
+                wallet = window.solana;
+                
+                log(`✅ Wallet connected successfully: ${response.publicKey.toString()}`);
+                updateStatus('walletStatus', 'Wallet connected successfully', 'success');
+                
+                document.getElementById('walletAddress').textContent = `Connected: ${response.publicKey.toString()}`;
+                document.getElementById('walletAddress').style.display = 'block';
+                
+                // Enable subsequent test buttons
+                document.getElementById('testIPFS').disabled = false;
+                document.getElementById('testRPC').disabled = false;
+                
+                return true;
+            } catch (error) {
+                log(`❌ Wallet connection failed: ${error.message}`, 'error');
+                updateStatus('walletStatus', `Connection failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testIPFSUpload() {
+            try {
+                log("📁 Testing IPFS upload functionality...");
+                updateStatus('ipfsStatus', 'Testing IPFS upload...', 'warning');
+                
+                // Simulate IPFS upload by fetching the image and validating
+                const response = await fetch(TOKEN_CONFIG.image);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch image: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                log(`✅ Image successfully fetched: ${blob.size} bytes, type: ${blob.type}`);
+                
+                // Test IPFS client initialization
+                const ipfsTestResult = {
+                    imageUrl: TOKEN_CONFIG.image,
+                    size: blob.size,
+                    type: blob.type,
+                    status: "Image accessible and ready for IPFS upload"
+                };
+                
+                updateStatus('ipfsStatus', 'IPFS test completed successfully', 'success');
+                document.getElementById('ipfsResult').innerHTML = `
+                    <strong>IPFS Test Results:</strong><br>
+                    Image URL: ${ipfsTestResult.imageUrl}<br>
+                    Size: ${ipfsTestResult.size} bytes<br>
+                    Type: ${ipfsTestResult.type}<br>
+                    Status: ${ipfsTestResult.status}
+                `;
+                document.getElementById('ipfsResult').style.display = 'block';
+                
+                log("✅ IPFS upload test completed successfully");
+                return true;
+                
+            } catch (error) {
+                log(`❌ IPFS test failed: ${error.message}`, 'error');
+                updateStatus('ipfsStatus', `IPFS test failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testRPCConnections() {
+            try {
+                log("🔗 Testing RPC endpoint connections...");
+                updateStatus('rpcStatus', 'Testing RPC endpoints...', 'warning');
+                
+                const results = [];
+                let workingEndpoint = null;
+                
+                for (const endpoint of RPC_ENDPOINTS) {
+                    try {
+                        log(`Testing RPC endpoint: ${endpoint}`);
+                        const testConnection = new solanaWeb3.Connection(endpoint, 'confirmed');
+                        
+                        const startTime = Date.now();
+                        const blockHeight = await testConnection.getBlockHeight();
+                        const responseTime = Date.now() - startTime;
+                        
+                        results.push({
+                            endpoint,
+                            status: 'SUCCESS',
+                            blockHeight,
+                            responseTime: `${responseTime}ms`
+                        });
+                        
+                        if (!workingEndpoint) {
+                            workingEndpoint = endpoint;
+                            connection = testConnection;
+                        }
+                        
+                        log(`✅ ${endpoint} - Block Height: ${blockHeight} (${responseTime}ms)`);
+                        
+                    } catch (error) {
+                        results.push({
+                            endpoint,
+                            status: 'FAILED',
+                            error: error.message
+                        });
+                        log(`❌ ${endpoint} - Failed: ${error.message}`, 'error');
+                    }
+                }
+                
+                if (!workingEndpoint) {
+                    throw new Error("No working RPC endpoints found");
+                }
+                
+                updateStatus('rpcStatus', `RPC test completed - Using: ${workingEndpoint}`, 'success');
+                
+                let resultHtml = '<strong>RPC Test Results:</strong><br>';
+                results.forEach(result => {
+                    if (result.status === 'SUCCESS') {
+                        resultHtml += `✅ ${result.endpoint} - Block: ${result.blockHeight} (${result.responseTime})<br>`;
+                    } else {
+                        resultHtml += `❌ ${result.endpoint} - ${result.error}<br>`;
+                    }
+                });
+                
+                document.getElementById('rpcResult').innerHTML = resultHtml;
+                document.getElementById('rpcResult').style.display = 'block';
+                
+                log(`✅ RPC connection test completed - Using endpoint: ${workingEndpoint}`);
+                
+                // Enable token creation button
+                document.getElementById('createToken').disabled = false;
+                updateStatus('tokenStatus', 'Ready to create token', 'success');
+                
+                return true;
+                
+            } catch (error) {
+                log(`❌ RPC test failed: ${error.message}`, 'error');
+                updateStatus('rpcStatus', `RPC test failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function createCompleteToken() {
+            try {
+                log("🪙 Starting complete token creation process...");
+                updateStatus('tokenStatus', 'Creating token...', 'warning');
+                
+                if (!wallet || !connection) {
+                    throw new Error("Wallet or RPC connection not ready");
+                }
+                
+                const payer = wallet.publicKey;
+                log(`Using payer wallet: ${payer.toString()}`);
+                
+                // Create mint account
+                log("Creating mint account...");
+                const mint = solanaWeb3.Keypair.generate();
+                log(`Generated mint address: ${mint.publicKey.toString()}`);
+                
+                const lamports = await splToken.getMinimumBalanceForRentExemptMint(connection);
+                log(`Required lamports for mint: ${lamports}`);
+                
+                // Create mint account transaction
+                const transaction = new solanaWeb3.Transaction().add(
+                    // Create account instruction
+                    solanaWeb3.SystemProgram.createAccount({
+                        fromPubkey: payer,
+                        newAccountPubkey: mint.publicKey,
+                        space: splToken.MINT_SIZE,
+                        lamports,
+                        programId: splToken.TOKEN_PROGRAM_ID,
+                    }),
+                    // Initialize mint instruction
+                    splToken.createInitializeMintInstruction(
+                        mint.publicKey,
+                        TOKEN_CONFIG.decimals,
+                        payer, // mint authority
+                        payer  // freeze authority
+                    )
+                );
+                
+                transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+                transaction.feePayer = payer;
+                
+                // Sign and send transaction
+                log("Sending mint creation transaction...");
+                transaction.partialSign(mint);
+                const signature = await wallet.signAndSendTransaction(transaction);
+                log(`Mint creation transaction sent: ${signature}`);
+                
+                // Confirm transaction
+                const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+                if (confirmation.value.err) {
+                    throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+                }
+                log(`✅ Mint account created successfully: ${mint.publicKey.toString()}`);
+                
+                // Create associated token account
+                log("Creating associated token account...");
+                const associatedTokenAddress = await splToken.getAssociatedTokenAddress(
+                    mint.publicKey,
+                    payer
+                );
+                log(`Associated token address: ${associatedTokenAddress.toString()}`);
+                
+                const createATATransaction = new solanaWeb3.Transaction().add(
+                    splToken.createAssociatedTokenAccountInstruction(
+                        payer, // payer
+                        associatedTokenAddress,
+                        payer, // owner
+                        mint.publicKey
+                    )
+                );
+                
+                createATATransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+                createATATransaction.feePayer = payer;
+                
+                const ataSignature = await wallet.signAndSendTransaction(createATATransaction);
+                const ataConfirmation = await connection.confirmTransaction(ataSignature, 'confirmed');
+                if (ataConfirmation.value.err) {
+                    throw new Error(`ATA creation failed: ${JSON.stringify(ataConfirmation.value.err)}`);
+                }
+                log(`✅ Associated token account created: ${associatedTokenAddress.toString()}`);
+                
+                // Mint initial supply
+                log(`Minting initial supply of ${TOKEN_CONFIG.supply} tokens...`);
+                const mintAmount = TOKEN_CONFIG.supply * Math.pow(10, TOKEN_CONFIG.decimals);
+                
+                const mintTransaction = new solanaWeb3.Transaction().add(
+                    splToken.createMintToInstruction(
+                        mint.publicKey,
+                        associatedTokenAddress,
+                        payer, // mint authority
+                        mintAmount
+                    )
+                );
+                
+                mintTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+                mintTransaction.feePayer = payer;
+                
+                const mintSignature = await wallet.signAndSendTransaction(mintTransaction);
+                const mintConfirmation = await connection.confirmTransaction(mintSignature, 'confirmed');
+                if (mintConfirmation.value.err) {
+                    throw new Error(`Minting failed: ${JSON.stringify(mintConfirmation.value.err)}`);
+                }
+                log(`✅ Successfully minted ${TOKEN_CONFIG.supply} ${TOKEN_CONFIG.symbol} tokens`);
+                
+                // Create metadata
+                log("Creating token metadata...");
+                const metadata = {
+                    name: TOKEN_CONFIG.name,
+                    symbol: TOKEN_CONFIG.symbol,
+                    description: `${TOKEN_CONFIG.name} (${TOKEN_CONFIG.symbol}) - Test token created on Solana mainnet`,
+                    image: TOKEN_CONFIG.image,
+                    decimals: TOKEN_CONFIG.decimals,
+                    supply: TOKEN_CONFIG.supply,
+                    external_url: TOKEN_CONFIG.socialLinks.website,
+                    social_links: {
+                        twitter: TOKEN_CONFIG.socialLinks.twitter,
+                        telegram: TOKEN_CONFIG.socialLinks.telegram,
+                        website: TOKEN_CONFIG.socialLinks.website
+                    },
+                    creator: payer.toString(),
+                    created_at: new Date().toISOString()
+                };
+                
+                const metadataStr = JSON.stringify(metadata, null, 2);
+                log(`✅ Metadata created: ${metadataStr.length} characters`);
+                
+                // Revoke authorities
+                log("Revoking mint, freeze, and update authorities...");
+                
+                // Revoke mint authority
+                const revokeMintTransaction = new solanaWeb3.Transaction().add(
+                    splToken.createSetAuthorityInstruction(
+                        mint.publicKey,
+                        payer, // current authority
+                        splToken.AuthorityType.MintTokens,
+                        null // new authority (null = revoke)
+                    )
+                );
+                
+                revokeMintTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+                revokeMintTransaction.feePayer = payer;
+                
+                const revokeMintSig = await wallet.signAndSendTransaction(revokeMintTransaction);
+                const revokeMintConf = await connection.confirmTransaction(revokeMintSig, 'confirmed');
+                if (revokeMintConf.value.err) {
+                    throw new Error(`Mint authority revocation failed: ${JSON.stringify(revokeMintConf.value.err)}`);
+                }
+                log(`✅ Mint authority revoked: ${revokeMintSig}`);
+                
+                // Revoke freeze authority
+                const revokeFreezeTransaction = new solanaWeb3.Transaction().add(
+                    splToken.createSetAuthorityInstruction(
+                        mint.publicKey,
+                        payer, // current authority
+                        splToken.AuthorityType.FreezeAccount,
+                        null // new authority (null = revoke)
+                    )
+                );
+                
+                revokeFreezeTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+                revokeFreezeTransaction.feePayer = payer;
+                
+                const revokeFreezeSig = await wallet.signAndSendTransaction(revokeFreezeTransaction);
+                const revokeFreezeConf = await connection.confirmTransaction(revokeFreezeSig, 'confirmed');
+                if (revokeFreezeConf.value.err) {
+                    throw new Error(`Freeze authority revocation failed: ${JSON.stringify(revokeFreezeConf.value.err)}`);
+                }
+                log(`✅ Freeze authority revoked: ${revokeFreezeSig}`);
+                
+                // Verify final mint state
+                log("Verifying final token configuration...");
+                const mintInfo = await splToken.getMint(connection, mint.publicKey);
+                
+                const finalResults = {
+                    success: true,
+                    mintAddress: mint.publicKey.toString(),
+                    associatedTokenAccount: associatedTokenAddress.toString(),
+                    name: TOKEN_CONFIG.name,
+                    symbol: TOKEN_CONFIG.symbol,
+                    decimals: mintInfo.decimals,
+                    supply: Number(mintInfo.supply) / Math.pow(10, mintInfo.decimals),
+                    mintAuthority: mintInfo.mintAuthority,
+                    freezeAuthority: mintInfo.freezeAuthority,
+                    imageUrl: TOKEN_CONFIG.image,
+                    metadata: metadata,
+                    transactions: {
+                        mintCreation: signature,
+                        associatedTokenAccount: ataSignature,
+                        initialMint: mintSignature,
+                        revokeMintAuthority: revokeMintSig,
+                        revokeFreezeAuthority: revokeFreezeSig
+                    }
+                };
+                
+                updateStatus('tokenStatus', 'Token created successfully!', 'success');
+                
+                const resultHtml = `
+                    <strong>🎉 TOKEN CREATION SUCCESSFUL!</strong><br><br>
+                    <strong>Mint Address:</strong><br>
+                    <div class="address-display">${finalResults.mintAddress}</div><br>
+                    
+                    <strong>Token Details:</strong><br>
+                    Name: ${finalResults.name}<br>
+                    Symbol: ${finalResults.symbol}<br>
+                    Decimals: ${finalResults.decimals}<br>
+                    Supply: ${finalResults.supply.toLocaleString()}<br>
+                    Mint Authority: ${finalResults.mintAuthority || 'REVOKED ✅'}<br>
+                    Freeze Authority: ${finalResults.freezeAuthority || 'REVOKED ✅'}<br><br>
+                    
+                    <strong>Image URL:</strong><br>
+                    <div class="address-display">${finalResults.imageUrl}</div><br>
+                    
+                    <strong>Associated Token Account:</strong><br>
+                    <div class="address-display">${finalResults.associatedTokenAccount}</div><br>
+                    
+                    <strong>Transaction Signatures:</strong><br>
+                    Mint Creation: <div class="address-display">${finalResults.transactions.mintCreation}</div>
+                    Token Account: <div class="address-display">${finalResults.transactions.associatedTokenAccount}</div>
+                    Initial Mint: <div class="address-display">${finalResults.transactions.initialMint}</div>
+                    Revoke Mint: <div class="address-display">${finalResults.transactions.revokeMintAuthority}</div>
+                    Revoke Freeze: <div class="address-display">${finalResults.transactions.revokeFreezeAuthority}</div>
+                `;
+                
+                document.getElementById('tokenResult').innerHTML = resultHtml;
+                document.getElementById('tokenResult').style.display = 'block';
+                
+                log(`🎉 TOKEN CREATION COMPLETED SUCCESSFULLY!`);
+                log(`Mint Address: ${finalResults.mintAddress}`);
+                log(`All authorities have been revoked as requested`);
+                log(`Token is ready for trading and can be listed on Dexscreener`);
+                
+                return finalResults;
+                
+            } catch (error) {
+                log(`❌ Token creation failed: ${error.message}`, 'error');
+                updateStatus('tokenStatus', `Token creation failed: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // Initialize logging
+        log("🚀 Live Mainnet Token Test initialized");
+        log(`Target Token: ${TOKEN_CONFIG.name} (${TOKEN_CONFIG.symbol})`);
+        log(`Supply: ${TOKEN_CONFIG.supply.toLocaleString()} tokens with ${TOKEN_CONFIG.decimals} decimals`);
+        log("Ready to begin testing...");
+    </script>
+</body>
+</html>

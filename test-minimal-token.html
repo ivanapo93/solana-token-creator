@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Token Creation - No Social Links</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #45a049; }
+        .result { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Token Creation - No Social Links Required</h1>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label>Token Name *</label>
+            <input type="text" id="name" value="TestCoin" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Token Symbol *</label>
+            <input type="text" id="symbol" value="TEST" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Supply *</label>
+            <input type="number" id="supply" value="1000000" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Decimals *</label>
+            <input type="number" id="decimals" value="9" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Description *</label>
+            <textarea id="description" required>A test token with no social links</textarea>
+        </div>
+        
+        <h3>Social Links (ALL OPTIONAL - LEFT EMPTY)</h3>
+        <div class="form-group">
+            <label>Twitter (Optional)</label>
+            <input type="text" id="twitter" placeholder="Leave empty to test">
+        </div>
+        
+        <div class="form-group">
+            <label>Discord (Optional)</label>
+            <input type="text" id="discord" placeholder="Leave empty to test">
+        </div>
+        
+        <div class="form-group">
+            <label>Instagram (Optional)</label>
+            <input type="text" id="instagram" placeholder="Leave empty to test">
+        </div>
+        
+        <div class="form-group">
+            <label>YouTube (Optional)</label>
+            <input type="text" id="youtube" placeholder="Leave empty to test">
+        </div>
+        
+        <button type="submit">🧪 Test Validation (No Social Links)</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Copy the exact validateMetadata function from main app
+        function validateMetadata(data) {
+            const required = ["name", "symbol", "supply", "decimals"];
+            for (const field of required) {
+                if (!data[field]) {
+                    throw new Error(`Missing required field: ${field}`);
+                }
+            }
+            if (!data.image && !data.metadataUri) {
+                throw new Error("Either image or metadataUri must be provided.");
+            }
+        }
+
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            
+            // Collect form data
+            const tokenData = {
+                name: document.getElementById('name').value,
+                symbol: document.getElementById('symbol').value,
+                supply: document.getElementById('supply').value,
+                decimals: document.getElementById('decimals').value,
+                description: document.getElementById('description').value,
+                image: 'test-image-url', // Provide image to satisfy validation
+                // Social links intentionally left empty/undefined
+                twitter: document.getElementById('twitter').value || undefined,
+                discord: document.getElementById('discord').value || undefined,
+                instagram: document.getElementById('instagram').value || undefined,
+                youtube: document.getElementById('youtube').value || undefined
+            };
+            
+            try {
+                // Test the validation function
+                validateMetadata(tokenData);
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ VALIDATION PASSED!</h3>
+                    <p><strong>SUCCESS:</strong> Token validation passed with empty social links!</p>
+                    <p><strong>Token Data:</strong></p>
+                    <pre>${JSON.stringify(tokenData, null, 2)}</pre>
+                    <p><strong>Social links were empty and validation still passed!</strong></p>
+                `;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ VALIDATION FAILED!</h3>
+                    <p><strong>ERROR:</strong> ${error.message}</p>
+                    <p><strong>This indicates social links are still being enforced as required!</strong></p>
+                    <p><strong>Token Data:</strong></p>
+                    <pre>${JSON.stringify(tokenData, null, 2)}</pre>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Empty Optional Fields</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a6bdf;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 15px;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #4a6bdf;
+        }
+
+        .test-section h3 {
+            color: #4a6bdf;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: #4a6bdf;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #3a5bd0;
+        }
+
+        .results {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9f0ff;
+            border-radius: 5px;
+            border: 1px solid #d0d9ff;
+        }
+
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .test-data {
+            margin-top: 15px;
+            font-family: monospace;
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+
+        .test-case {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .test-case:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .test-case h4 {
+            margin-bottom: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Optional Fields Testing</h1>
+            <p>Verifying token creation with empty optional fields</p>
+        </div>
+
+        <div class="content">
+            <h2>Test Suite for Optional Fields</h2>
+            <p>This page tests both token creation flows to ensure optional fields are truly optional.</p>
+
+            <div class="test-section">
+                <h3>Manual Creation Tests</h3>
+
+                <div class="test-case">
+                    <h4>Test Case 1: No Authority Settings</h4>
+                    <div class="test-controls">
+                        <button onclick="runManualTest('no-authority')">Run Test</button>
+                    </div>
+                    <div class="results" id="manual-no-authority-result">
+                        <p>Test not run yet</p>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>Test Case 2: No Social Links</h4>
+                    <div class="test-controls">
+                        <button onclick="runManualTest('no-socials')">Run Test</button>
+                    </div>
+                    <div class="results" id="manual-no-socials-result">
+                        <p>Test not run yet</p>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>Test Case 3: No Optional Fields At All</h4>
+                    <div class="test-controls">
+                        <button onclick="runManualTest('no-optionals')">Run Test</button>
+                    </div>
+                    <div class="results" id="manual-no-optionals-result">
+                        <p>Test not run yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>AI-Powered Creation Tests</h3>
+
+                <div class="test-case">
+                    <h4>Test Case 1: No Authority Settings</h4>
+                    <div class="test-controls">
+                        <button onclick="runAiTest('no-authority')">Run Test</button>
+                    </div>
+                    <div class="results" id="ai-no-authority-result">
+                        <p>Test not run yet</p>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>Test Case 2: No Social Links</h4>
+                    <div class="test-controls">
+                        <button onclick="runAiTest('no-socials')">Run Test</button>
+                    </div>
+                    <div class="results" id="ai-no-socials-result">
+                        <p>Test not run yet</p>
+                    </div>
+                </div>
+
+                <div class="test-case">
+                    <h4>Test Case 3: No Optional Fields At All</h4>
+                    <div class="test-controls">
+                        <button onclick="runAiTest('no-optionals')">Run Test</button>
+                    </div>
+                    <div class="results" id="ai-no-optionals-result">
+                        <p>Test not run yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated token creation API
+        class TokenCreator {
+            constructor() {
+                this.createdTokens = [];
+            }
+
+            // Method to create a token with the given data
+            createToken(tokenData, method) {
+                return new Promise((resolve, reject) => {
+                    // Validate required fields
+                    if (!tokenData.name || !tokenData.symbol) {
+                        return reject(new Error("Required fields missing: name and symbol must be provided"));
+                    }
+
+                    // Process the token data
+                    const processedData = {
+                        name: tokenData.name,
+                        symbol: tokenData.symbol,
+                        decimals: tokenData.decimals || 9,
+                        description: tokenData.description || "",
+                        initialSupply: tokenData.initialSupply || 1000000,
+                        transactionFee: tokenData.transactionFee || 0,
+                        
+                        // Optional authority settings
+                        authorities: {
+                            revokeMint: tokenData.revokeMint === true,
+                            revokeFreeze: tokenData.revokeFreeze === true,
+                            revokeUpdate: tokenData.revokeUpdate === true
+                        },
+                        
+                        // Optional social links
+                        socialLinks: {
+                            website: tokenData.website || "",
+                            twitter: tokenData.twitter || "",
+                            telegram: tokenData.telegram || "",
+                            discord: tokenData.discord || ""
+                        },
+                        
+                        // Metadata for the test
+                        creationMethod: method,
+                        createdAt: new Date().toISOString(),
+                        tokenAddress: "So1" + Math.random().toString(36).substring(2, 15)
+                    };
+                    
+                    // Simulate API delay
+                    setTimeout(() => {
+                        this.createdTokens.push(processedData);
+                        resolve(processedData);
+                    }, 800);
+                });
+            }
+        }
+
+        // Create token creator instance
+        const tokenCreator = new TokenCreator();
+
+        // Manual token creation test
+        async function runManualTest(testCase) {
+            const resultDiv = document.getElementById(`manual-${testCase}-result`);
+            resultDiv.innerHTML = '<p>Running test...</p>';
+            
+            try {
+                // Create base token data
+                const tokenData = {
+                    name: "Test Manual Token",
+                    symbol: "TMT",
+                    decimals: 9,
+                    description: "A token for testing manual creation",
+                    initialSupply: 1000000,
+                    transactionFee: 1
+                };
+                
+                // Modify data based on test case
+                switch (testCase) {
+                    case 'no-authority':
+                        // Add social links but no authority settings
+                        tokenData.website = "https://example.com";
+                        tokenData.twitter = "https://x.com/example";
+                        tokenData.telegram = "https://t.me/example";
+                        tokenData.discord = "https://discord.gg/example";
+                        break;
+                        
+                    case 'no-socials':
+                        // Add authority settings but no social links
+                        tokenData.revokeMint = true;
+                        tokenData.revokeFreeze = true;
+                        tokenData.revokeUpdate = false;
+                        break;
+                        
+                    case 'no-optionals':
+                        // No optional fields at all
+                        break;
+                }
+                
+                // Create the token
+                const result = await tokenCreator.createToken(tokenData, 'manual');
+                
+                // Display the result
+                resultDiv.innerHTML = `
+                    <p class="success">Test passed! Token created successfully.</p>
+                    <div class="test-data">${JSON.stringify(result, null, 2)}</div>
+                `;
+                
+                // Verify the test case
+                let verification = '<ul>';
+                
+                if (testCase === 'no-authority' || testCase === 'no-optionals') {
+                    // Verify authorities are not set
+                    if (!result.authorities.revokeMint && 
+                        !result.authorities.revokeFreeze && 
+                        !result.authorities.revokeUpdate) {
+                        verification += '<li class="success">Authority settings correctly empty ✓</li>';
+                    } else {
+                        verification += '<li class="error">Authority settings should be empty ✗</li>';
+                    }
+                }
+                
+                if (testCase === 'no-socials' || testCase === 'no-optionals') {
+                    // Verify social links are empty
+                    if (result.socialLinks.website === "" && 
+                        result.socialLinks.twitter === "" && 
+                        result.socialLinks.telegram === "" && 
+                        result.socialLinks.discord === "") {
+                        verification += '<li class="success">Social links correctly empty ✓</li>';
+                    } else {
+                        verification += '<li class="error">Social links should be empty ✗</li>';
+                    }
+                }
+                
+                verification += '</ul>';
+                resultDiv.innerHTML += verification;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">Test failed: ${error.message}</p>
+                `;
+            }
+        }
+
+        // AI token creation test
+        async function runAiTest(testCase) {
+            const resultDiv = document.getElementById(`ai-${testCase}-result`);
+            resultDiv.innerHTML = '<p>Running test...</p>';
+            
+            try {
+                // Create base token data - simulate AI generation
+                const tokenData = {
+                    name: "AI Generated Token",
+                    symbol: "AGT",
+                    decimals: 9,
+                    description: "An AI-generated token for testing purposes",
+                    initialSupply: 10000000,
+                    transactionFee: 2
+                };
+                
+                // Modify data based on test case
+                switch (testCase) {
+                    case 'no-authority':
+                        // Add social links but no authority settings
+                        tokenData.website = "https://ai-example.com";
+                        tokenData.twitter = "https://x.com/ai-example";
+                        tokenData.telegram = "https://t.me/ai-example";
+                        tokenData.discord = "https://discord.gg/ai-example";
+                        break;
+                        
+                    case 'no-socials':
+                        // Add authority settings but no social links
+                        tokenData.revokeMint = true;
+                        tokenData.revokeFreeze = false;
+                        tokenData.revokeUpdate = true;
+                        break;
+                        
+                    case 'no-optionals':
+                        // No optional fields at all
+                        break;
+                }
+                
+                // Create the token
+                const result = await tokenCreator.createToken(tokenData, 'ai');
+                
+                // Display the result
+                resultDiv.innerHTML = `
+                    <p class="success">Test passed! Token created successfully.</p>
+                    <div class="test-data">${JSON.stringify(result, null, 2)}</div>
+                `;
+                
+                // Verify the test case
+                let verification = '<ul>';
+                
+                if (testCase === 'no-authority' || testCase === 'no-optionals') {
+                    // Verify authorities are not set
+                    if (!result.authorities.revokeMint && 
+                        !result.authorities.revokeFreeze && 
+                        !result.authorities.revokeUpdate) {
+                        verification += '<li class="success">Authority settings correctly empty ✓</li>';
+                    } else {
+                        verification += '<li class="error">Authority settings should be empty ✗</li>';
+                    }
+                }
+                
+                if (testCase === 'no-socials' || testCase === 'no-optionals') {
+                    // Verify social links are empty
+                    if (result.socialLinks.website === "" && 
+                        result.socialLinks.twitter === "" && 
+                        result.socialLinks.telegram === "" && 
+                        result.socialLinks.discord === "") {
+                        verification += '<li class="success">Social links correctly empty ✓</li>';
+                    } else {
+                        verification += '<li class="error">Social links should be empty ✗</li>';
+                    }
+                }
+                
+                verification += '</ul>';
+                resultDiv.innerHTML += verification;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">Test failed: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

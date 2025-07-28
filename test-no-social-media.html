@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Token Creation - No Social Media</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .success-banner {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .summary {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 No Social Media Test</h1>
+        <p class="subtitle">Verifying token creation without social media fields</p>
+        
+        <div class="success-banner">
+            <strong>✅ ALL SOCIAL MEDIA REMOVED!</strong><br>
+            Frontend forms, backend validation, and processing logic completely removed.<br>
+            Testing token creation with clean, social-media-free workflow.
+        </div>
+
+        <div class="summary">
+            <strong>📋 Changes Applied:</strong><br>
+            <div class="code-block">
+✅ Frontend (index.html):
+   - Removed all social media input fields
+   - Removed social links configuration modals
+   - Removed social links processing JavaScript
+   - Removed metadata social links integration
+
+✅ Backend (routes/tokens.js):
+   - Removed processSocialLinks() function
+   - Removed social links validation
+   - Removed social links from token records
+   - Removed social links from API responses
+
+✅ Website Generator (promo-generator.js):
+   - Removed generateSocialLinksSection() functionality
+   - Removed all social platform references
+   - Simplified promotional website generation</div>
+            
+            <strong>✅ What This Achieves:</strong>
+            <ul>
+                <li>Token creation works without any social media requirements</li>
+                <li>No validation errors related to social links</li>
+                <li>Clean, focused token creation experience</li>
+                <li>Simplified API payloads and responses</li>
+                <li>Reduced code complexity and maintenance</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 1: Basic Token Creation</h3>
+            <p>Test minimal token creation with only essential fields.</p>
+            <button onclick="testBasicToken()">Test Basic Token</button>
+            <div id="basic-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 2: Manual Token Creation</h3>
+            <p>Test manual token creation with all optional fields.</p>
+            <button onclick="testManualToken()">Test Manual Token</button>
+            <div id="manual-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 3: AI Token Creation</h3>
+            <p>Test AI-powered token creation without social media.</p>
+            <button onclick="testAIToken()">Test AI Token</button>
+            <div id="ai-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Server Management</h3>
+            <button onclick="checkServerStatus()">Check Server Status</button>
+            <div id="server-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        // Mock wallet address for testing
+        const TEST_WALLET = 'HpL4n5UbU4D8UqKdwVLzFaJkS5ZEm5C6HLpcdSbBx7Aa';
+
+        async function makeRequest(endpoint, data = null) {
+            try {
+                const options = {
+                    method: data ? 'POST' : 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Wallet-Address': TEST_WALLET // Mock auth header
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const result = await response.json();
+                
+                return {
+                    status: response.status,
+                    success: response.ok,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    success: false,
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        function displayResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            const className = result.success ? 'success' : 'error';
+            element.className = `result ${className}`;
+            
+            let message = `Status: ${result.status}\nSuccess: ${result.success}\n`;
+            
+            if (result.success) {
+                message += '✅ SUCCESS: Token creation works without social media!\n';
+                message += 'No social media fields required or processed.\n\n';
+                
+                // Check if response contains any social links references
+                const responseString = JSON.stringify(result.data);
+                if (responseString.includes('socialLinks') || 
+                    responseString.includes('twitter') || 
+                    responseString.includes('discord') ||
+                    responseString.includes('instagram')) {
+                    message += '⚠️  WARNING: Response still contains social media references!\n';
+                } else {
+                    message += '✅ CLEAN: Response contains no social media references.\n';
+                }
+            } else {
+                message += '❌ ERROR: ';
+                if (result.data.details && Array.isArray(result.data.details)) {
+                    const socialErrors = result.data.details.filter(err => 
+                        err.path && (err.path.includes('socialLinks') || 
+                                   err.path.includes('twitter') || 
+                                   err.path.includes('discord') ||
+                                   err.path.includes('instagram'))
+                    );
+                    if (socialErrors.length > 0) {
+                        message += 'Social media validation still exists!\n';
+                        message += 'Backend cleanup may be incomplete.\n\n';
+                    }
+                }
+            }
+            
+            message += `Response: ${JSON.stringify(result.data, null, 2)}`;
+            element.textContent = message;
+        }
+
+        async function testBasicToken() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Testing...';
+            
+            const testData = {
+                name: 'TestBasic',
+                symbol: 'BASIC',
+                description: 'Basic test token without any social media',
+                walletAddress: TEST_WALLET,
+                useAI: false,
+                imageUrl: 'https://via.placeholder.com/400x400?text=BASIC'
+                // NO socialLinks field at all
+            };
+            
+            const result = await makeRequest('/tokens/create', testData);
+            displayResult('basic-result', result);
+            
+            button.disabled = false;
+            button.textContent = 'Test Basic Token';
+        }
+
+        async function testManualToken() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Testing...';
+            
+            const testData = {
+                name: 'TestManual',
+                symbol: 'MANUAL',
+                description: 'Manual test token with all non-social fields',
+                walletAddress: TEST_WALLET,
+                useAI: false,
+                decimals: 6,
+                supply: 100000000,
+                transactionFeePercentage: 1.5,
+                feeCollectorWallet: TEST_WALLET,
+                imageUrl: 'https://via.placeholder.com/400x400?text=MANUAL'
+                // NO socialLinks field
+            };
+            
+            const result = await makeRequest('/tokens/create', testData);
+            displayResult('manual-result', result);
+            
+            button.disabled = false;
+            button.textContent = 'Test Manual Token';
+        }
+
+        async function testAIToken() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Testing...';
+            
+            const testData = {
+                name: 'TestAI',
+                symbol: 'AI',
+                description: 'AI-powered test token generation',
+                walletAddress: TEST_WALLET,
+                useAI: true,
+                imagePrompt: 'Create a simple crypto token logo'
+                // NO socialLinks field
+            };
+            
+            const result = await makeRequest('/tokens/create', testData);
+            displayResult('ai-result', result);
+            
+            button.disabled = false;
+            button.textContent = 'Test AI Token';
+        }
+
+        async function checkServerStatus() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Checking...';
+            
+            const result = await makeRequest('/health');
+            displayResult('server-result', result);
+            
+            button.disabled = false;
+            button.textContent = 'Check Server Status';
+        }
+
+        // Auto-check server status on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkServerStatus, 1000);
+        });
+    </script>
+</body>
+</html>

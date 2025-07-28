@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Dynamic Meta Tags for Social Sharing -->
+    <title>{{COIN_NAME}} ({{COIN_SYMBOL}}) - Official Token | {{PLATFORM_NAME}}</title>
+    <meta name="description" content="{{COIN_DESCRIPTION}} | Contract Address: {{CONTRACT_ADDRESS}} | Created on {{PLATFORM_NAME}}">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{{COIN_NAME}} ({{COIN_SYMBOL}}) - Official Token">
+    <meta property="og:description" content="{{COIN_DESCRIPTION}} | Created on {{PLATFORM_NAME}}">
+    <meta property="og:image" content="{{COIN_IMAGE_URL}}">
+    <meta property="og:url" content="{{SITE_URL}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{COIN_NAME}} Official">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{COIN_NAME}} ({{COIN_SYMBOL}}) - Official Token">
+    <meta name="twitter:description" content="{{COIN_DESCRIPTION}} | Created on {{PLATFORM_NAME}}">
+    <meta name="twitter:image" content="{{COIN_IMAGE_URL}}">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="{{COIN_SYMBOL}}, {{COIN_NAME}}, Solana, meme token, cryptocurrency, DeFi, {{PLATFORM_NAME}}">
+    <meta name="author" content="{{PLATFORM_NAME}}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{SITE_URL}}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{COIN_IMAGE_URL}}">
+    
+    <!-- Production-ready Tailwind CSS -->
+    <link rel="stylesheet" href="./css/tailwind.css">
+    
+    <!-- Custom Styles with SolMeme Creator Branding -->
+    <style>
+        :root {
+            /* SolMeme Creator Brand Colors */
+            --primary-color: #667eea;      /* Purple-blue gradient start */
+            --secondary-color: #764ba2;    /* Deep purple gradient end */
+            --accent-color: #f093fb;       /* Pink accent for highlights */
+            
+            /* Status Colors */
+            --success-color: #10b981;      /* Green for success messages */
+            --warning-color: #f59e0b;      /* Yellow for warnings */
+            --error-color: #ef4444;        /* Red for errors */
+            
+            /* Text Colors */
+            --text-primary: #1f2937;       /* Dark text */
+            --text-secondary: #6b7280;     /* Light text */
+            --text-white: #ffffff;         /* White text */
+            
+            /* Background Colors */
+            --bg-white: #ffffff;
+            --bg-light: #f9fafb;
+            --bg-dark: #111827;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .copy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .coin-image {
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .platform-badge {
+            background: linear-gradient(45deg, var(--accent-color), var(--primary-color));
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .social-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .social-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-subtitle { font-size: 1.1rem; }
+            .contract-address { font-size: 0.8rem; }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .glass-effect {
+                background: rgba(0, 0, 0, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Platform Header -->
+    <div class="container mx-auto px-4 py-4">
+        <div class="text-center">
+            <div class="platform-badge">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                </svg>
+                Powered by {{PLATFORM_NAME}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <!-- Coin Image -->
+            <div class="mb-8">
+                <img src="{{COIN_IMAGE_URL}}" 
+                     alt="{{COIN_NAME}} Logo" 
+                     class="coin-image floating mx-auto w-32 h-32 md:w-48 md:h-48 object-cover">
+            </div>
+            
+            <!-- Title -->
+            <h1 class="hero-title text-4xl md:text-6xl font-bold text-white mb-4">
+                {{COIN_NAME}}
+            </h1>
+            
+            <!-- Symbol Badge -->
+            <div class="inline-block bg-white bg-opacity-20 rounded-full px-6 py-2 mb-6">
+                <span class="text-2xl md:text-3xl font-bold text-white">${{COIN_SYMBOL}}</span>
+            </div>
+            
+            <!-- Description -->
+            <p class="hero-subtitle text-lg md:text-xl text-white opacity-90 max-w-2xl mx-auto mb-8 leading-relaxed">
+                {{COIN_DESCRIPTION}}
+            </p>
+            
+            <!-- Trust Badge -->
+            <div class="inline-flex items-center gap-2 bg-green-500 bg-opacity-20 text-green-100 px-4 py-2 rounded-full text-sm font-medium">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Verified on Solana Blockchain
+            </div>
+        </div>
+        
+        <!-- Contract Address Section -->
+        <div class="max-w-4xl mx-auto mb-12">
+            <div class="glass-effect rounded-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-white text-center mb-6">
+                    📜 Contract Address
+                </h2>
+                
+                <!-- Contract Address Display -->
+                <div class="bg-black bg-opacity-30 rounded-xl p-4 mb-6">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-white text-sm opacity-70 mb-2">Contract Address (CA)</label>
+                            <input type="text" 
+                                   id="contractAddress"
+                                   value="{{CONTRACT_ADDRESS}}"
+                                   readonly
+                                   class="contract-address w-full bg-transparent text-white font-mono text-sm md:text-base p-3 border border-white border-opacity-30 rounded-lg focus:outline-none focus:border-white select-all">
+                        </div>
+                        <button onclick="copyContractAddress()" 
+                                class="copy-button bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy CA
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Quick Trading Links -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="https://solscan.io/token/{{CONTRACT_ADDRESS}}" 
+                       target="_blank" 
+                       class="flex items-center justify-center gap-2 bg-blue-600 bg-opacity-80 hover:bg-opacity-100 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
+                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-1a1 1 0 10-2 0v1H5V7h1a1 1 0 000-2H5z"></path>
+                        </svg>
+                        View on Solscan
+                    </a>
+                    
+                    <a href="https://dexscreener.com/solana/{{CONTRACT_ADDRESS}}" 
+                       target="_blank" 
+                       class="flex items-center justify-center gap-2 bg-green-600 bg-opacity-80 hover:bg-opacity-100 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                        DexScreener
+                    </a>
+                    
+                    <a href="https://raydium.io/swap/?inputCurrency=sol&outputCurrency={{CONTRACT_ADDRESS}}" 
+                       target="_blank" 
+                       class="flex items-center justify-center gap-2 bg-purple-600 bg-opacity-80 hover:bg-opacity-100 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                        </svg>
+                        Trade on Raydium
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Token Features Section -->
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Feature 1 -->
+            <div class="feature-card text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Verified Contract</h3>
+                <p class="text-white opacity-80">Fully audited smart contract deployed on Solana blockchain</p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="feature-card text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Community Driven</h3>
+                <p class="text-white opacity-80">Built by the community, for the community with transparent tokenomics</p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="feature-card text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Lightning Fast</h3>
+                <p class="text-white opacity-80">Ultra-fast transactions with minimal fees on Solana network</p>
+            </div>
+        </div>
+        
+        <!-- Social Sharing Section -->
+        <div class="text-center mb-12">
+            <div class="glass-effect rounded-xl p-6 inline-block max-w-2xl">
+                <h3 class="text-xl font-bold text-white mb-4">🚀 Spread the Word</h3>
+                <p class="text-white opacity-80 mb-6">Help grow the {{COIN_NAME}} community by sharing on social media!</p>
+                
+                <div class="flex flex-wrap justify-center gap-4">
+                    <!-- Twitter -->
+                    <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{COIN_NAME}}%20({{COIN_SYMBOL}})%20on%20Solana!%20Created%20on%20{{PLATFORM_NAME}}%20🚀%20{{SITE_URL}}%20%23Solana%20%23{{COIN_SYMBOL}}%20%23Crypto" 
+                       target="_blank" 
+                       class="social-button text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.844"></path>
+                        </svg>
+                        Share on X
+                    </a>
+                    
+                    <!-- Discord -->
+                    <button onclick="copyToDiscord()" 
+                            class="social-button text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"></path>
+                        </svg>
+                        Copy for Discord
+                    </button>
+                    
+                    <!-- Telegram -->
+                    <a href="https://t.me/share/url?url={{SITE_URL}}&text=🚀%20Check%20out%20{{COIN_NAME}}%20({{COIN_SYMBOL}})%20on%20Solana!%20Created%20on%20{{PLATFORM_NAME}}" 
+                       target="_blank" 
+                       class="social-button text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472c-.18 1.898-.962 6.502-1.36 8.627c-.168.9-.499 1.201-.82 1.23c-.696.065-1.225-.46-1.9-.902c-1.056-.693-1.653-1.124-2.678-1.8c-1.185-.78-.417-1.21.258-1.91c.177-.184 3.247-2.977 3.307-3.23c.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345c-.48.33-.913.49-1.302.48c-.428-.008-1.252-.241-1.865-.44c-.752-.245-1.349-.374-1.297-.789c.027-.216.325-.437.893-.663c3.498-1.524 5.83-2.529 6.998-3.014c3.332-1.386 4.025-1.627 4.476-1.635z"></path>
+                        </svg>
+                        Share on Telegram
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Platform Promotion -->
+        <div class="text-center mb-8">
+            <div class="glass-effect rounded-xl p-6 inline-block max-w-lg">
+                <h3 class="text-lg font-bold text-white mb-3">💡 Create Your Own Token</h3>
+                <p class="text-white opacity-80 mb-4 text-sm">
+                    Want to create your own meme token like {{COIN_NAME}}? 
+                    {{PLATFORM_NAME}} makes it easy!
+                </p>
+                <a href="{{PLATFORM_URL}}" 
+                   target="_blank"
+                   class="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path>
+                    </svg>
+                    Launch Your Token
+                </a>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-12 text-center">
+            <p class="text-white opacity-60 text-sm">
+                Created with 💜 on Solana • Generated by <a href="{{PLATFORM_URL}}" class="hover:opacity-80 underline">{{PLATFORM_NAME}}</a>
+            </p>
+            <p class="text-white opacity-40 text-xs mt-2">
+                {{GENERATION_DATE}}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300">
+        ✅ Copied to clipboard!
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // Copy contract address to clipboard
+        function copyContractAddress() {
+            const addressInput = document.getElementById('contractAddress');
+            addressInput.select();
+            addressInput.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(addressInput.value).then(() => {
+                showToast('Contract address copied!');
+                
+                // Analytics tracking
+                trackEvent('copy_contract_address', {
+                    coin_symbol: '{{COIN_SYMBOL}}',
+                    contract_address: addressInput.value
+                });
+            }).catch(() => {
+                // Fallback for older browsers
+                document.execCommand('copy');
+                showToast('Contract address copied!');
+            });
+        }
+        
+        // Copy formatted message for Discord
+        function copyToDiscord() {
+            const message = `🚀 **{{COIN_NAME}} ({{COIN_SYMBOL}})**
+
+{{COIN_DESCRIPTION}}
+
+📜 **Contract Address:**
+\`{{CONTRACT_ADDRESS}}\`
+
+🌐 **Official Site:** {{SITE_URL}}
+
+Created on {{PLATFORM_NAME}} 💜
+
+#Solana #{{COIN_SYMBOL}} #Crypto #{{PLATFORM_NAME}}`;
+            
+            navigator.clipboard.writeText(message).then(() => {
+                showToast('Discord message copied!');
+                
+                // Analytics tracking
+                trackEvent('copy_discord_message', {
+                    coin_symbol: '{{COIN_SYMBOL}}'
+                });
+            }).catch(() => {
+                showToast('Please copy manually');
+            });
+        }
+        
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        // Auto-select contract address on click
+        document.getElementById('contractAddress').addEventListener('click', function() {
+            this.select();
+        });
+        
+        // Keyboard shortcut for copying (Ctrl+C or Cmd+C)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                const selection = window.getSelection().toString();
+                if (!selection) {
+                    copyContractAddress();
+                    e.preventDefault();
+                }
+            }
+        });
+        
+        // Analytics tracking
+        function trackEvent(event, data) {
+            console.log('Event:', event, data);
+            
+            // Send to analytics if configured
+            if (typeof gtag !== 'undefined') {
+                gtag('event', event, data);
+            }
+            
+            // Send to platform analytics if available
+            if (typeof window.platformAnalytics !== 'undefined') {
+                window.platformAnalytics.track(event, data);
+            }
+        }
+        
+        // Track page view
+        trackEvent('promo_page_view', {
+            coin_symbol: '{{COIN_SYMBOL}}',
+            coin_name: '{{COIN_NAME}}',
+            timestamp: new Date().toISOString(),
+            platform: '{{PLATFORM_NAME}}'
+        });
+        
+        // Track button clicks
+        document.querySelectorAll('a[href], button').forEach(element => {
+            element.addEventListener('click', function() {
+                const elementText = this.textContent.trim();
+                const href = this.href;
+                
+                if (href && href.includes('solscan.io')) {
+                    trackEvent('click_solscan', { coin_symbol: '{{COIN_SYMBOL}}' });
+                } else if (href && href.includes('dexscreener.com')) {
+                    trackEvent('click_dexscreener', { coin_symbol: '{{COIN_SYMBOL}}' });
+                } else if (href && href.includes('raydium.io')) {
+                    trackEvent('click_raydium', { coin_symbol: '{{COIN_SYMBOL}}' });
+                } else if (href && href.includes('twitter.com')) {
+                    trackEvent('click_twitter_share', { coin_symbol: '{{COIN_SYMBOL}}' });
+                } else if (href && href.includes('t.me')) {
+                    trackEvent('click_telegram_share', { coin_symbol: '{{COIN_SYMBOL}}' });
+                } else if (href && href.includes('{{PLATFORM_URL}}')) {
+                    trackEvent('click_platform_link', { coin_symbol: '{{COIN_SYMBOL}}' });
+                }
+            });
+        });
+        
+        // Lazy loading for better performance
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add intersection observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe all feature cards
+            document.querySelectorAll('.feature-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+    
+    <!-- Analytics (if enabled) -->
+    {{#if ENABLE_ANALYTICS}}
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{GOOGLE_ANALYTICS_ID}}');
+    </script>
+    {{/if}}
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Fee Fix Test</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+        }
+        
+        .highlight {
+            background: rgba(255, 255, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .test-case {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        small {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 Quick Transaction Fee Fix Test</h1>
+        <p>Testing the fixed transaction fee input that only accepts numeric values</p>
+        
+        <div class="highlight">
+            <h3>✅ Fixed Issues:</h3>
+            <ul>
+                <li>Changed dropdown to numeric input field</li>
+                <li>Added automatic % symbol removal</li>
+                <li>Added input validation and cleaning</li>
+                <li>Added range enforcement (0-5)</li>
+                <li>Clear user instructions</li>
+            </ul>
+        </div>
+        
+        <div class="form-group">
+            <label>Transaction Fee (FIXED - Numeric Only)</label>
+            <input type="number" id="transactionFee" value="1" min="0" max="5" step="0.1" placeholder="1" oninput="cleanTransactionFeeInput(this)">
+            <small>Enter numeric value only (e.g., "1" for 1%). NO % symbol.</small>
+        </div>
+        
+        <button class="btn" onclick="testTransactionFee()">🧪 Test Transaction Fee Input</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+        
+        <div class="test-case">
+            <h3>📋 Manual Test Instructions:</h3>
+            <ol>
+                <li><strong>Type "1%"</strong> - Should automatically become "1"</li>
+                <li><strong>Type "1.5%"</strong> - Should automatically become "1.5"</li>
+                <li><strong>Type "abc"</strong> - Should be rejected (no letters)</li>
+                <li><strong>Type "10"</strong> - Should be limited to "5" (max value)</li>
+                <li><strong>Type "-1"</strong> - Should be limited to "0" (min value)</li>
+                <li><strong>Type "1.2.3"</strong> - Should become "1.23" (single decimal)</li>
+            </ol>
+        </div>
+        
+        <button class="btn" onclick="runAutomatedTests()" style="background: linear-gradient(45deg, #28a745, #20c997);">
+            🤖 Run Automated Tests
+        </button>
+        
+        <div id="automatedResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Clean transaction fee input function (copied from main app)
+        function cleanTransactionFeeInput(input) {
+            // Remove any non-numeric characters except decimal point
+            let value = input.value.replace(/[^0-9.]/g, '');
+            
+            // Ensure only one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            // Update the input value
+            input.value = value;
+            
+            // Validate range
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+                if (numValue > 5) {
+                    input.value = '5';
+                } else if (numValue < 0) {
+                    input.value = '0';
+                }
+            }
+        }
+        
+        // Test transaction fee functionality
+        function testTransactionFee() {
+            const input = document.getElementById('transactionFee');
+            const result = document.getElementById('result');
+            const value = input.value;
+            
+            // Simulate the validation that happens in the main app
+            let cleanValue = value.replace(/[%]/g, ''); // Remove any % symbols
+            const numericValue = parseFloat(cleanValue);
+            
+            let isValid = true;
+            let message = '';
+            
+            if (value.includes('%')) {
+                message += '⚠️ % symbol detected and will be removed\n';
+            }
+            
+            if (isNaN(numericValue)) {
+                isValid = false;
+                message += '❌ Not a valid number\n';
+            } else if (numericValue < 0 || numericValue > 5) {
+                isValid = false;
+                message += '❌ Value outside valid range (0-5)\n';
+            } else {
+                message += '✅ Valid transaction fee value\n';
+            }
+            
+            message += `\nInput: "${value}"\n`;
+            message += `Cleaned: "${cleanValue}"\n`;
+            message += `Numeric: ${numericValue}\n`;
+            message += `Represents: ${numericValue}% transaction fee\n`;
+            message += `Status: ${isValid ? 'ACCEPTED' : 'REJECTED'}`;
+            
+            result.style.display = 'block';
+            result.className = isValid ? 'result success' : 'result error';
+            result.textContent = message;
+        }
+        
+        // Run automated tests
+        function runAutomatedTests() {
+            const testCases = [
+                { input: '1', expected: '1', valid: true, description: 'Basic numeric input' },
+                { input: '1%', expected: '1', valid: true, description: 'Input with % symbol' },
+                { input: '1.5', expected: '1.5', valid: true, description: 'Decimal input' },
+                { input: '1.5%', expected: '1.5', valid: true, description: 'Decimal with % symbol' },
+                { input: 'abc', expected: '', valid: false, description: 'Non-numeric input' },
+                { input: '10', expected: '5', valid: true, description: 'Value above maximum' },
+                { input: '-1', expected: '0', valid: true, description: 'Negative value' },
+                { input: '1.2.3', expected: '1.23', valid: true, description: 'Multiple decimals' },
+                { input: '0', expected: '0', valid: true, description: 'Zero value' },
+                { input: '5', expected: '5', valid: true, description: 'Maximum value' }
+            ];
+            
+            const input = document.getElementById('transactionFee');
+            const result = document.getElementById('automatedResult');
+            let allPassed = true;
+            let report = '🤖 Automated Test Results:\n\n';
+            
+            testCases.forEach((testCase, index) => {
+                // Set input value
+                input.value = testCase.input;
+                
+                // Trigger the cleaning function
+                cleanTransactionFeeInput(input);
+                
+                // Get the result
+                const actualValue = input.value;
+                const passed = actualValue === testCase.expected;
+                
+                if (!passed) allPassed = false;
+                
+                report += `Test ${index + 1}: ${testCase.description}\n`;
+                report += `  Input: "${testCase.input}"\n`;
+                report += `  Expected: "${testCase.expected}"\n`;
+                report += `  Actual: "${actualValue}"\n`;
+                report += `  Result: ${passed ? '✅ PASS' : '❌ FAIL'}\n\n`;
+            });
+            
+            report += `\nOverall Result: ${allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`;
+            
+            result.style.display = 'block';
+            result.className = allPassed ? 'result success' : 'result error';
+            result.textContent = report;
+            
+            // Reset input to default
+            input.value = '1';
+        }
+        
+        // Auto-run basic test on page load
+        window.onload = function() {
+            setTimeout(testTransactionFee, 500);
+        };
+    </script>
+</body>
+</html>

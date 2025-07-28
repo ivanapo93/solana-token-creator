@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Token Creator - No Backend Required</title>
+    
+    <!-- Buffer Polyfill - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        console.log('🔧 Initializing Buffer polyfill...');
+        // Global Buffer definition to fix "buffer is not defined" errors
+        window.Buffer = buffer.Buffer;
+        
+        // Test Buffer functionality
+        try {
+            const testBuffer = Buffer.alloc(10);
+            const testFromString = Buffer.from('test', 'utf8');
+            console.log('✅ Buffer polyfill loaded successfully');
+        } catch (error) {
+            console.error('❌ Buffer polyfill failed:', error);
+            // Add fallback alert for critical errors
+            alert('Critical dependency failed to load. Please refresh the page or try a different browser.');
+        }
+    </script>
+    
+    <!-- Solana Web3.js - with specific version and error handling -->
+    <script>
+        // Add error handling for script loading
+        function handleScriptError(scriptName, error) {
+            console.error(`❌ Failed to load ${scriptName}:`, error);
+            document.getElementById('logs').innerHTML += `<div class="log-entry">
+                <span class="timestamp">[${new Date().toLocaleTimeString()}]</span>
+                <span class="level-error">LOADING ERROR: Failed to load ${scriptName}. ${error ? error.message : ''}</span>
+            </div>`;
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.0/lib/index.iife.min.js" 
+        onerror="handleScriptError('@solana/web3.js', event)"></script>
+    
+    <!-- SPL Token - with specific version and error handling -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.13/lib/index.iife.min.js" 
+        onerror="handleScriptError('@solana/spl-token', event)"></script>
+    <style>
+        :root {
+            --color-primary: #9945FF;
+            --color-secondary: #14F195;
+            --color-error: #FF6B6B;
+            --color-warning: #FFD166;
+            --color-success: #06D6A0;
+            --color-bg: #1A202C;
+            --color-text: #F7FAFC;
+            --color-card: #2D3748;
+            --color-input: #4A5568;
+            --radius: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background-color: var(--color-card);
+            border-radius: var(--radius);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card h2 .icon {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--color-input);
+            background-color: var(--color-input);
+            color: var(--color-text);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(153, 69, 255, 0.3);
+        }
+        
+        button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(153, 69, 255, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .button-secondary {
+            background: var(--color-input);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge.connected {
+            background-color: var(--color-success);
+            color: #000;
+        }
+        
+        .status-badge.disconnected {
+            background-color: var(--color-error);
+            color: #fff;
+        }
+        
+        .status-badge.pending {
+            background-color: var(--color-warning);
+            color: #000;
+        }
+        
+        .token-details {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius);
+            border-left: 4px solid var(--color-secondary);
+        }
+        
+        .token-details h3 {
+            margin-bottom: 15px;
+            color: var(--color-secondary);
+        }
+        
+        .token-property {
+            margin-bottom: 10px;
+        }
+        
+        .token-property .label {
+            font-weight: 500;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .token-property .value {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            word-break: break-all;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .token-property .value.success {
+            color: var(--color-success);
+        }
+        
+        .logs {
+            margin-top: 30px;
+            height: 300px;
+            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: var(--radius);
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        
+        .log-entry .timestamp {
+            opacity: 0.6;
+        }
+        
+        .log-entry .level-info {
+            color: #63B3ED;
+        }
+        
+        .log-entry .level-success {
+            color: var(--color-success);
+        }
+        
+        .log-entry .level-warning {
+            color: var(--color-warning);
+        }
+        
+        .log-entry .level-error {
+            color: var(--color-error);
+        }
+        
+        .social-links {
+            margin-top: 15px;
+        }
+        
+        .social-links .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .social-links .form-row {
+                flex-direction: column;
+            }
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .form-row > div {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+        }
+        
+        .separator {
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 25px 0;
+        }
+        
+        .preview-image {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: var(--radius);
+            margin-top: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .error-text {
+            color: var(--color-error);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .rpc-options {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .rpc-option {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .rpc-option:last-child {
+            border-bottom: none;
+        }
+        
+        .rpc-option input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .banner {
+            background: linear-gradient(90deg, rgba(153, 69, 255, 0.1), rgba(20, 241, 149, 0.1));
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--color-primary);
+        }
+        
+        .banner h3 {
+            color: var(--color-secondary);
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Direct Token Creator</h1>
+            <p>Create SPL tokens directly on Solana with no backend services required. All operations happen in your browser, using your wallet for signing transactions.</p>
+        </header>
+        
+        <div class="banner">
+            <h3>📡 No Backend Required</h3>
+            <p>This tool connects directly to Solana RPC nodes, bypassing any API or backend dependencies. Your token creation happens directly on the blockchain.</p>
+        </div>
+        
+        <div class="card">
+            <h2><span class="icon">👛</span> Wallet Connection</h2>
+            <div id="wallet-status" class="status-badge disconnected">Wallet disconnected</div>
+            <div id="wallet-info" style="display: none;">
+                <div class="token-property">
+                    <div class="label">Connected Address</div>
+                    <div class="value" id="wallet-address">...</div>
+                </div>
+                <div class="token-property">
+                    <div class="label">SOL Balance</div>
+                    <div class="value" id="wallet-balance">...</div>
+                </div>
+            </div>
+            <button id="connect-wallet-btn">Connect Phantom Wallet</button>
+        </div>
+        
+        <div class="card">
+            <h2><span class="icon">🪙</span> Token Details</h2>
+            
+            <div class="form-group">
+                <label for="token-name">Token Name</label>
+                <input type="text" id="token-name" placeholder="My Awesome Token" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="token-symbol">Token Symbol</label>
+                    <input type="text" id="token-symbol" placeholder="TOKEN" required maxlength="10">
+                </div>
+                
+                <div class="form-group">
+                    <label for="token-decimals">Decimals</label>
+                    <input type="number" id="token-decimals" min="0" max="9" value="9" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="token-supply">Initial Supply</label>
+                    <input type="number" id="token-supply" value="1000000000" min="1" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="token-image">Token Image URL</label>
+                <input type="url" id="token-image" placeholder="https://example.com/token-image.png">
+                <div id="image-preview"></div>
+            </div>
+            
+            <button id="preview-image-btn" class="button-secondary">Preview Image</button>
+        </div>
+        
+        <div class="card">
+            <h2><span class="icon">🔗</span> Social Links</h2>
+            
+            <div class="social-links">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="website">Website URL</label>
+                        <input type="url" id="website" placeholder="https://mytoken.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="twitter">Twitter</label>
+                        <input type="url" id="twitter" placeholder="https://twitter.com/mytoken">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telegram">Telegram</label>
+                        <input type="url" id="telegram" placeholder="https://t.me/mytoken">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="discord">Discord</label>
+                        <input type="url" id="discord" placeholder="https://discord.gg/mytoken">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><span class="icon">⚙️</span> Advanced Configuration</h2>
+            
+            <div class="form-group">
+                <label>Authority Management</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="revoke-mint" checked>
+                    <label for="revoke-mint">Revoke Mint Authority (prevents creating more tokens)</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="revoke-freeze" checked>
+                    <label for="revoke-freeze">Revoke Freeze Authority (prevents freezing accounts)</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="rpc-endpoint">Solana RPC Endpoint</label>
+                <select id="rpc-endpoint">
+                    <option value="https://api.mainnet-beta.solana.com">api.mainnet-beta.solana.com (Official)</option>
+                    <option value="https://solana-mainnet.g.alchemy.com/v2/9UB7l5spSYtK-bF4FCvUY" selected>Alchemy (Recommended)</option>
+                    <option value="https://rpc.ankr.com/solana">Ankr</option>
+                    <option value="https://solana-api.projectserum.com">Project Serum</option>
+                    <option value="https://ssc-dao.genesysgo.net">GenesysGo</option>
+                    <option value="custom">Custom Endpoint...</option>
+                </select>
+                <input type="text" id="custom-rpc-endpoint" placeholder="https://your-rpc-endpoint.com" style="display: none; margin-top: 10px;">
+            </div>
+        </div>
+        
+        <button id="create-token-btn" disabled>Create Token on Solana Mainnet</button>
+        
+        <div id="token-result" class="token-details" style="display: none;">
+            <h3>🎉 Token Created Successfully!</h3>
+            
+            <div class="token-property">
+                <div class="label">Mint Address</div>
+                <div class="value" id="result-mint-address"></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Name</div>
+                <div class="value" id="result-name"></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Symbol</div>
+                <div class="value" id="result-symbol"></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Decimals</div>
+                <div class="value" id="result-decimals"></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Supply</div>
+                <div class="value" id="result-supply"></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Mint Authority</div>
+                <div class="value" id="result-mint-authority"></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Freeze Authority</div>
+                <div class="value" id="result-freeze-authority"></div>
+            </div>
+            
+            <div class="separator"></div>
+            
+            <div class="token-property">
+                <div class="label">View on Solscan</div>
+                <div class="value"><a id="result-solscan" href="#" target="_blank" style="color: var(--color-secondary);">Open in explorer</a></div>
+            </div>
+            
+            <div class="token-property">
+                <div class="label">Create Liquidity Pool on Raydium</div>
+                <div class="value"><a id="result-raydium" href="#" target="_blank" style="color: var(--color-secondary);">Open on Raydium</a></div>
+            </div>
+        </div>
+        
+        <div class="logs" id="logs">
+            <div class="log-entry">
+                <span class="timestamp">[2025-07-27 19:00:00]</span>
+                <span class="level-info">Direct Token Creator initialized.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utility functions
+        function addLog(message, level = 'info') {
+            const logsElement = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp';
+            timestampSpan.textContent = `[${timestamp}] `;
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.className = `level-${level}`;
+            messageSpan.textContent = message;
+            
+            logEntry.appendChild(timestampSpan);
+            logEntry.appendChild(messageSpan);
+            
+            logsElement.appendChild(logEntry);
+            logsElement.scrollTop = logsElement.scrollHeight;
+            
+            // Also log to console for debugging
+            console.log(`[${level.toUpperCase()}] ${message}`);
+        }
+        
+        // Global variables
+        let wallet = null;
+        let connection = null;
+        let publicKey = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('Direct Token Creator initialized');
+            
+            // Check if Phantom is installed
+            if (!window.solana || !window.solana.isPhantom) {
+                addLog('Phantom wallet extension not found. Please install it.', 'error');
+                document.getElementById('connect-wallet-btn').textContent = 'Install Phantom Wallet';
+                document.getElementById('connect-wallet-btn').addEventListener('click', () => {
+                    window.open('https://phantom.app/', '_blank');
+                });
+                return;
+            }
+            
+            // Set up event listeners
+            document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
+            document.getElementById('preview-image-btn').addEventListener('click', previewImage);
+            document.getElementById('create-token-btn').addEventListener('click', createToken);
+            document.getElementById('rpc-endpoint').addEventListener('change', handleRpcChange);
+            
+            // Initialize UI state
+            updateUIState();
+            
+            // RPC endpoint setup
+            const rpcEndpointSelect = document.getElementById('rpc-endpoint');
+            rpcEndpointSelect.addEventListener('change', function() {
+                const customRpcInput = document.getElementById('custom-rpc-endpoint');
+                if (this.value === 'custom') {
+                    customRpcInput.style.display = 'block';
+                } else {
+                    customRpcInput.style.display = 'none';
+                }
+            });
+        });
+        
+        // Connect to Phantom wallet
+        async function connectWallet() {
+            try {
+                addLog('Attempting to connect to Phantom wallet...');
+                
+                const resp = await window.solana.connect();
+                wallet = window.solana;
+                publicKey = resp.publicKey;
+                
+                addLog(`Wallet connected successfully: ${publicKey.toString().substring(0, 10)}...`, 'success');
+                
+                // Update wallet status
+                document.getElementById('wallet-status').className = 'status-badge connected';
+                document.getElementById('wallet-status').textContent = 'Wallet connected';
+                document.getElementById('wallet-info').style.display = 'block';
+                document.getElementById('wallet-address').textContent = publicKey.toString();
+                document.getElementById('connect-wallet-btn').textContent = 'Disconnect';
+                document.getElementById('connect-wallet-btn').removeEventListener('click', connectWallet);
+                document.getElementById('connect-wallet-btn').addEventListener('click', disconnectWallet);
+                
+                // Initialize connection based on selected RPC endpoint
+                const rpcEndpointSelect = document.getElementById('rpc-endpoint');
+                const selectedEndpoint = rpcEndpointSelect.value === 'custom' 
+                    ? document.getElementById('custom-rpc-endpoint').value 
+                    : rpcEndpointSelect.value;
+                
+                connection = new solanaWeb3.Connection(selectedEndpoint, 'confirmed');
+                
+                // Check wallet balance
+                await updateWalletBalance();
+                
+                // Enable token creation button
+                document.getElementById('create-token-btn').disabled = false;
+                
+            } catch (error) {
+                addLog(`Failed to connect wallet: ${error.message}`, 'error');
+            }
+        }
+        
+        // Disconnect wallet
+        function disconnectWallet() {
+            try {
+                if (wallet) {
+                    wallet.disconnect();
+                    wallet = null;
+                    publicKey = null;
+                    connection = null;
+                    
+                    addLog('Wallet disconnected', 'info');
+                    
+                    // Update wallet status
+                    document.getElementById('wallet-status').className = 'status-badge disconnected';
+                    document.getElementById('wallet-status').textContent = 'Wallet disconnected';
+                    document.getElementById('wallet-info').style.display = 'none';
+                    document.getElementById('connect-wallet-btn').textContent = 'Connect Phantom Wallet';
+                    document.getElementById('connect-wallet-btn').removeEventListener('click', disconnectWallet);
+                    document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
+                    
+                    // Disable token creation button
+                    document.getElementById('create-token-btn').disabled = true;
+                }
+            } catch (error) {
+                addLog(`Error disconnecting wallet: ${error.message}`, 'error');
+            }
+        }
+        
+        // Preview token image
+        function previewImage() {
+            const imageUrl = document.getElementById('token-image').value;
+            const previewElement = document.getElementById('image-preview');
+            
+            if (!imageUrl) {
+                previewElement.innerHTML = '';
+                return;
+            }
+            
+            const img = document.createElement('img');
+            img.className = 'preview-image';
+            img.alt = 'Token image preview';
+            img.onerror = () => {
+                previewElement.innerHTML = '<p class="error-text">⚠️ Unable to load image. Please check the URL.</p>';
+            };
+            img.onload = () => {
+                addLog('Image loaded successfully', 'success');
+            };
+            img.src = imageUrl;
+            
+            previewElement.innerHTML = '';
+            previewElement.appendChild(img);
+        }
+        
+        // Update wallet balance
+        async function updateWalletBalance() {
+            if (!connection || !publicKey) return;
+            
+            try {
+                const balance = await connection.getBalance(publicKey);
+                const solBalance = balance / solanaWeb3.LAMPORTS_PER_SOL;
+                
+                document.getElementById('wallet-balance').textContent = `${solBalance.toFixed(6)} SOL`;
+                
+                if (solBalance < 0.02) {
+                    addLog('Low wallet balance detected. You may not have enough SOL to create a token.', 'warning');
+                    document.getElementById('wallet-balance').style.color = 'var(--color-error)';
+                } else {
+                    document.getElementById('wallet-balance').style.color = '';
+                }
+                
+            } catch (error) {
+                addLog(`Failed to fetch wallet balance: ${error.message}`, 'error');
+                document.getElementById('wallet-balance').textContent = 'Error fetching balance';
+            }
+        }
+        
+        // Handle RPC endpoint change
+        function handleRpcChange() {
+            if (connection) {
+                const rpcEndpointSelect = document.getElementById('rpc-endpoint');
+                const selectedEndpoint = rpcEndpointSelect.value === 'custom' 
+                    ? document.getElementById('custom-rpc-endpoint').value 
+                    : rpcEndpointSelect.value;
+                
+                addLog(`RPC endpoint changed to: ${selectedEndpoint}`, 'info');
+                connection = new solanaWeb3.Connection(selectedEndpoint, 'confirmed');
+                updateWalletBalance();
+            }
+        }
+        
+        // Update UI state
+        function updateUIState() {
+            const isWalletConnected = !!wallet && !!publicKey;
+            document.getElementById('create-token-btn').disabled = !isWalletConnected;
+        }
+        
+        // Create token
+        async function createToken() {
+            if (!wallet || !connection || !publicKey) {
+                addLog('Wallet not connected', 'error');
+                return;
+            }
+            
+            // Validate inputs
+            const name = document.getElementById('token-name').value.trim();
+            const symbol = document.getElementById('token-symbol').value.trim().toUpperCase();
+            const decimals = parseInt(document.getElementById('token-decimals').value);
+            const supply = parseFloat(document.getElementById('token-supply').value);
+            const imageUrl = document.getElementById('token-image').value;
+            const revokeMint = document.getElementById('revoke-mint').checked;
+            const revokeFreeeze = document.getElementById('revoke-freeze').checked;
+            
+            // Social links
+            const website = document.getElementById('website').value;
+            const twitter = document.getElementById('twitter').value;
+            const telegram = document.getElementById('telegram').value;
+            const discord = document.getElementById('discord').value;
+            
+            // Validation
+            if (!name) {
+                addLog('Token name is required', 'error');
+                return;
+            }
+            
+            if (!symbol) {
+                addLog('Token symbol is required', 'error');
+                return;
+            }
+            
+            if (isNaN(decimals) || decimals < 0 || decimals > 9) {
+                addLog('Decimals must be between 0 and 9', 'error');
+                return;
+            }
+            
+            if (isNaN(supply) || supply <= 0) {
+                addLog('Supply must be greater than 0', 'error');
+                return;
+            }
+            
+            // Disable the create button to prevent double clicks
+            const createButton = document.getElementById('create-token-btn');
+            createButton.disabled = true;
+            createButton.textContent = 'Creating Token...';
+            
+            try {
+                addLog('Beginning token creation process...', 'info');
+                
+                // 1. Create mint account
+                addLog('Generating mint account...', 'info');
+                const mint = solanaWeb3.Keypair.generate();
+                addLog(`Mint address generated: ${mint.publicKey.toString()}`, 'success');
+                
+                // 2. Calculate rent exempt lamports
+                const mintRent = await connection.getMinimumBalanceForRentExemption(splToken.MINT_SIZE);
+                addLog(`Mint rent: ${mintRent / solanaWeb3.LAMPORTS_PER_SOL} SOL`, 'info');
+                
+                // 3. Create a transaction to create the mint account
+                const transaction = new solanaWeb3.Transaction().add(
+                    // Create account instruction
+                    solanaWeb3.SystemProgram.createAccount({
+                        fromPubkey: publicKey,
+                        newAccountPubkey: mint.publicKey,
+                        space: splToken.MINT_SIZE,
+                        lamports: mintRent,
+                        programId: splToken.TOKEN_PROGRAM_ID,
+                    }),
+                    // Initialize mint instruction
+                    splToken.createInitializeMintInstruction(
+                        mint.publicKey,
+                        decimals,
+                        publicKey,
+                        publicKey
+                    )
+                );
+                
+                // Get latest blockhash
+                const { blockhash } = await connection.getLatestBlockhash('confirmed');
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = publicKey;
+                
+                // Sign with the mint account
+                transaction.partialSign(mint);
+                
+                // Send transaction to wallet for signing and broadcast
+                addLog('Sending mint creation transaction to wallet for approval...', 'info');
+                const signedTransaction = await wallet.signTransaction(transaction);
+                
+                // Send the transaction to the network
+                const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+                addLog(`Mint creation transaction sent: ${signature}`, 'info');
+                
+                // Wait for confirmation
+                addLog('Waiting for transaction confirmation...', 'info');
+                const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+                
+                if (confirmation.value.err) {
+                    throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+                }
+                
+                addLog('Mint account created successfully!', 'success');
+                
+                // 4. Create associated token account
+                addLog('Creating associated token account...', 'info');
+                const associatedTokenAddress = await splToken.getAssociatedTokenAddress(
+                    mint.publicKey,
+                    publicKey
+                );
+                
+                const createAtaTransaction = new solanaWeb3.Transaction().add(
+                    splToken.createAssociatedTokenAccountInstruction(
+                        publicKey,
+                        associatedTokenAddress,
+                        publicKey,
+                        mint.publicKey
+                    )
+                );
+                
+                // Get latest blockhash
+                const { blockhash: ataBlocKhash } = await connection.getLatestBlockhash('confirmed');
+                createAtaTransaction.recentBlockhash = ataBlocKhash;
+                createAtaTransaction.feePayer = publicKey;
+                
+                // Send to wallet for signing
+                addLog('Sending token account transaction to wallet for approval...', 'info');
+                const signedAtaTransaction = await wallet.signTransaction(createAtaTransaction);
+                
+                // Send the transaction to the network
+                const ataSignature = await connection.sendRawTransaction(signedAtaTransaction.serialize());
+                addLog(`Token account transaction sent: ${ataSignature}`, 'info');
+                
+                // Wait for confirmation
+                addLog('Waiting for token account confirmation...', 'info');
+                const ataConfirmation = await connection.confirmTransaction(ataSignature, 'confirmed');
+                
+                if (ataConfirmation.value.err) {
+                    throw new Error(`Token account creation failed: ${JSON.stringify(ataConfirmation.value.err)}`);
+                }
+                
+                addLog('Token account created successfully!', 'success');
+                
+                // 5. Mint tokens to the associated token account
+                addLog(`Minting ${supply} ${symbol} tokens...`, 'info');
+                const mintAmount = supply * Math.pow(10, decimals);
+                
+                const mintToTransaction = new solanaWeb3.Transaction().add(
+                    splToken.createMintToInstruction(
+                        mint.publicKey,
+                        associatedTokenAddress,
+                        publicKey,
+                        BigInt(mintAmount.toString())
+                    )
+                );
+                
+                // Get latest blockhash
+                const { blockhash: mintToBlocKhash } = await connection.getLatestBlockhash('confirmed');
+                mintToTransaction.recentBlockhash = mintToBlocKhash;
+                mintToTransaction.feePayer = publicKey;
+                
+                // Send to wallet for signing
+                addLog('Sending mint tokens transaction to wallet for approval...', 'info');
+                const signedMintToTransaction = await wallet.signTransaction(mintToTransaction);
+                
+                // Send the transaction to the network
+                const mintToSignature = await connection.sendRawTransaction(signedMintToTransaction.serialize());
+                addLog(`Mint tokens transaction sent: ${mintToSignature}`, 'info');
+                
+                // Wait for confirmation
+                addLog('Waiting for token minting confirmation...', 'info');
+                const mintToConfirmation = await connection.confirmTransaction(mintToSignature, 'confirmed');
+                
+                if (mintToConfirmation.value.err) {
+                    throw new Error(`Token minting failed: ${JSON.stringify(mintToConfirmation.value.err)}`);
+                }
+                
+                addLog(`Successfully minted ${supply} ${symbol} tokens!`, 'success');
+                
+                let revokeMintAuthoritySignature = null;
+                let revokeFreezeAuthoritySignature = null;
+                
+                // 6. Revoke mint authority if requested
+                if (revokeMint) {
+                    addLog('Revoking mint authority...', 'info');
+                    
+                    const revokeMintTransaction = new solanaWeb3.Transaction().add(
+                        splToken.createSetAuthorityInstruction(
+                            mint.publicKey,
+                            publicKey,
+                            splToken.AuthorityType.MintTokens,
+                            null // Setting to null revokes it permanently
+                        )
+                    );
+                    
+                    // Get latest blockhash
+                    const { blockhash: revokeMintBlockhash } = await connection.getLatestBlockhash('confirmed');
+                    revokeMintTransaction.recentBlockhash = revokeMintBlockhash;
+                    revokeMintTransaction.feePayer = publicKey;
+                    
+                    // Send to wallet for signing
+                    addLog('Sending mint authority revocation transaction to wallet for approval...', 'info');
+                    const signedRevokeMintTransaction = await wallet.signTransaction(revokeMintTransaction);
+                    
+                    // Send the transaction to the network
+                    revokeMintAuthoritySignature = await connection.sendRawTransaction(signedRevokeMintTransaction.serialize());
+                    addLog(`Mint authority revocation transaction sent: ${revokeMintAuthoritySignature}`, 'info');
+                    
+                    // Wait for confirmation
+                    addLog('Waiting for mint authority revocation confirmation...', 'info');
+                    const revokeMintConfirmation = await connection.confirmTransaction(revokeMintAuthoritySignature, 'confirmed');
+                    
+                    if (revokeMintConfirmation.value.err) {
+                        throw new Error(`Mint authority revocation failed: ${JSON.stringify(revokeMintConfirmation.value.err)}`);
+                    }
+                    
+                    addLog('Mint authority successfully revoked!', 'success');
+                }
+                
+                // 7. Revoke freeze authority if requested
+                if (revokeFreeeze) {
+                    addLog('Revoking freeze authority...', 'info');
+                    
+                    const revokeFreezeTransaction = new solanaWeb3.Transaction().add(
+                        splToken.createSetAuthorityInstruction(
+                            mint.publicKey,
+                            publicKey,
+                            splToken.AuthorityType.FreezeAccount,
+                            null // Setting to null revokes it permanently
+                        )
+                    );
+                    
+                    // Get latest blockhash
+                    const { blockhash: revokeFreezeBlockhash } = await connection.getLatestBlockhash('confirmed');
+                    revokeFreezeTransaction.recentBlockhash = revokeFreezeBlockhash;
+                    revokeFreezeTransaction.feePayer = publicKey;
+                    
+                    // Send to wallet for signing
+                    addLog('Sending freeze authority revocation transaction to wallet for approval...', 'info');
+                    const signedRevokeFreezeTransaction = await wallet.signTransaction(revokeFreezeTransaction);
+                    
+                    // Send the transaction to the network
+                    revokeFreezeAuthoritySignature = await connection.sendRawTransaction(signedRevokeFreezeTransaction.serialize());
+                    addLog(`Freeze authority revocation transaction sent: ${revokeFreezeAuthoritySignature}`, 'info');
+                    
+                    // Wait for confirmation
+                    addLog('Waiting for freeze authority revocation confirmation...', 'info');
+                    const revokeFreezeConfirmation = await connection.confirmTransaction(revokeFreezeAuthoritySignature, 'confirmed');
+                    
+                    if (revokeFreezeConfirmation.value.err) {
+                        throw new Error(`Freeze authority revocation failed: ${JSON.stringify(revokeFreezeConfirmation.value.err)}`);
+                    }
+                    
+                    addLog('Freeze authority successfully revoked!', 'success');
+                }
+                
+                // 8. Get token metadata
+                addLog('Retrieving token information...', 'info');
+                const mintInfo = await splToken.getMint(connection, mint.publicKey);
+                
+                // 9. Display results
+                const mintAddressString = mint.publicKey.toString();
+                
+                document.getElementById('result-mint-address').textContent = mintAddressString;
+                document.getElementById('result-name').textContent = name;
+                document.getElementById('result-symbol').textContent = symbol;
+                document.getElementById('result-decimals').textContent = mintInfo.decimals;
+                document.getElementById('result-supply').textContent = `${supply.toLocaleString()} ${symbol}`;
+                
+                // Check authorities
+                if (revokeMint) {
+                    document.getElementById('result-mint-authority').textContent = 'REVOKED ✅';
+                    document.getElementById('result-mint-authority').classList.add('success');
+                } else {
+                    document.getElementById('result-mint-authority').textContent = publicKey.toString();
+                }
+                
+                if (revokeFreeeze) {
+                    document.getElementById('result-freeze-authority').textContent = 'REVOKED ✅';
+                    document.getElementById('result-freeze-authority').classList.add('success');
+                } else {
+                    document.getElementById('result-freeze-authority').textContent = publicKey.toString();
+                }
+                
+                // Set links
+                document.getElementById('result-solscan').href = `https://solscan.io/token/${mintAddressString}`;
+                document.getElementById('result-raydium').href = `https://raydium.io/liquidity/create/?token=${mintAddressString}`;
+                
+                // Show result section
+                document.getElementById('token-result').style.display = 'block';
+                
+                // Build metadata object with social links
+                const metadata = {
+                    name,
+                    symbol,
+                    description: `${name} (${symbol}) - SPL Token`,
+                    image: imageUrl || null,
+                    external_url: website || null,
+                    social_links: {}
+                };
+                
+                if (twitter) metadata.social_links.twitter = twitter;
+                if (telegram) metadata.social_links.telegram = telegram;
+                if (discord) metadata.social_links.discord = discord;
+                
+                addLog('Token metadata created for explorer indexing', 'info');
+                addLog(JSON.stringify(metadata, null, 2), 'info');
+                
+                addLog('🎉 Token creation completed successfully!', 'success');
+                addLog(`Token: ${name} (${symbol})`, 'success');
+                addLog(`Mint Address: ${mintAddressString}`, 'success');
+                addLog('All requested authorities have been revoked', 'success');
+                
+            } catch (error) {
+                addLog(`Token creation failed: ${error.message}`, 'error');
+            } finally {
+                // Re-enable the create button
+                createButton.disabled = false;
+                createButton.textContent = 'Create Token on Solana Mainnet';
+            }
+        }
+    </script>
+</body>
+</html>

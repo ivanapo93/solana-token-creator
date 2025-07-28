@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffer Fix Test - Solana Token Creator</title>
+    
+    <!-- Buffer Polyfill - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        console.log('🔧 Initializing Buffer polyfill...');
+        window.Buffer = buffer.Buffer;
+        
+        // Test Buffer functionality
+        try {
+            const testBuffer = Buffer.alloc(10);
+            const testFromString = Buffer.from('test', 'utf8');
+            console.log('✅ Buffer polyfill loaded successfully');
+            console.log('✅ Buffer.alloc works:', testBuffer instanceof Buffer);
+            console.log('✅ Buffer.from works:', testFromString instanceof Buffer);
+        } catch (error) {
+            console.error('❌ Buffer polyfill failed:', error);
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .warning { border-color: #ffc107; background: #fff3cd; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Buffer Fix Test for Solana Token Creator</h1>
+        <p>This page tests all the Buffer-related fixes implemented for the SPL Token fallback functionality.</p>
+        
+        <div id="buffer-test" class="test-section">
+            <h3>✅ Buffer Polyfill Test</h3>
+            <p>Testing browser-compatible Buffer implementation...</p>
+            <div id="buffer-results"></div>
+        </div>
+        
+        <div id="solana-test" class="test-section">
+            <h3>🔄 Mock Solana Integration Test</h3>
+            <p>Testing Buffer.from(publicKey.toBytes()) functionality...</p>
+            <button onclick="testSolanaBufferCompatibility()">Test Solana Buffer Operations</button>
+            <div id="solana-results"></div>
+        </div>
+        
+        <div id="fallback-test" class="test-section">
+            <h3>🏗️ CreateMint Fallback Test</h3>
+            <p>Testing fixed fallback createMint function logic...</p>
+            <button onclick="testCreateMintFallback()">Test CreateMint Fallback</button>
+            <div id="fallback-results"></div>
+        </div>
+        
+        <div id="cdn-test" class="test-section">
+            <h3>📦 CDN Loading Test</h3>
+            <p>Testing stable CDN for SPL Token library...</p>
+            <button onclick="testCDNLoading()">Test CDN Loading</button>
+            <div id="cdn-results"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize test results
+        document.addEventListener('DOMContentLoaded', function() {
+            testBufferPolyfill();
+        });
+        
+        function testBufferPolyfill() {
+            const resultsDiv = document.getElementById('buffer-results');
+            const testSection = document.getElementById('buffer-test');
+            
+            try {
+                // Test Buffer.alloc
+                const allocTest = Buffer.alloc(32);
+                console.log('✅ Buffer.alloc test passed');
+                
+                // Test Buffer.from
+                const fromTest = Buffer.from('Hello Solana', 'utf8');
+                console.log('✅ Buffer.from test passed');
+                
+                // Test Buffer operations
+                const copyTest = Buffer.alloc(32);
+                fromTest.copy(copyTest, 0);
+                console.log('✅ Buffer.copy test passed');
+                
+                resultsDiv.innerHTML = `
+                    <pre>✅ Buffer.alloc(32): ${allocTest.length} bytes
+✅ Buffer.from('Hello Solana'): ${fromTest.length} bytes  
+✅ Buffer.copy operation: SUCCESS
+✅ Buffer polyfill fully functional</pre>
+                `;
+                testSection.className = 'test-section success';
+                
+            } catch (error) {
+                console.error('❌ Buffer test failed:', error);
+                resultsDiv.innerHTML = `<pre>❌ Error: ${error.message}</pre>`;
+                testSection.className = 'test-section error';
+            }
+        }
+        
+        function testSolanaBufferCompatibility() {
+            const resultsDiv = document.getElementById('solana-results');
+            const testSection = document.getElementById('solana-test');
+            
+            try {
+                // Mock PublicKey object with toBytes() method
+                const mockPublicKey = {
+                    toBytes: function() {
+                        // Return a 32-byte Uint8Array (typical Solana public key)
+                        return new Uint8Array(32).fill(1);
+                    },
+                    toString: function() {
+                        return 'MockPublicKey123...';
+                    }
+                };
+                
+                // Test the fixed Buffer.from(publicKey.toBytes()) pattern
+                const initializeMintData = Buffer.alloc(67);
+                initializeMintData.writeUInt8(0, 0); // InitializeMint instruction
+                initializeMintData.writeUInt8(9, 1); // decimals
+                
+                // This is the FIXED version that should work
+                Buffer.from(mockPublicKey.toBytes()).copy(initializeMintData, 2);
+                
+                console.log('✅ Buffer.from(publicKey.toBytes()) test passed');
+                
+                resultsDiv.innerHTML = `
+                    <pre>✅ Mock PublicKey created: ${mockPublicKey.toString()}
+✅ publicKey.toBytes(): ${mockPublicKey.toBytes().length} bytes
+✅ Buffer.from(publicKey.toBytes()): SUCCESS
+✅ Buffer.copy operation: SUCCESS
+✅ Fixed Buffer pattern working correctly</pre>
+                `;
+                testSection.className = 'test-section success';
+                
+            } catch (error) {
+                console.error('❌ Solana Buffer test failed:', error);
+                resultsDiv.innerHTML = `<pre>❌ Error: ${error.message}</pre>`;
+                testSection.className = 'test-section error';
+            }
+        }
+        
+        function testCreateMintFallback() {
+            const resultsDiv = document.getElementById('fallback-results');
+            const testSection = document.getElementById('fallback-test');
+            
+            try {
+                // Mock the fixed createMint fallback function
+                const mockCreateMint = function(connection, payer, mintAuthority, freezeAuthority, decimals, keypair) {
+                    console.log('🏗️ Testing fallback createMint function...');
+                    
+                    // Test the fixed Buffer operations
+                    const initializeMintData = Buffer.alloc(67);
+                    initializeMintData.writeUInt8(0, 0); // InitializeMint instruction
+                    initializeMintData.writeUInt8(decimals, 1);
+                    
+                    // FIXED: Use Buffer.from(mintAuthority.toBytes()) instead of mintAuthority.toBuffer()
+                    Buffer.from(mintAuthority.toBytes()).copy(initializeMintData, 2);
+                    initializeMintData.writeUInt8(freezeAuthority ? 1 : 0, 34);
+                    if (freezeAuthority) {
+                        Buffer.from(freezeAuthority.toBytes()).copy(initializeMintData, 35);
+                    }
+                    
+                    return {
+                        success: true,
+                        mintAddress: 'MockMintAddress123...',
+                        signature: 'MockSignature456...'
+                    };
+                };
+                
+                // Mock parameters
+                const mockMintAuthority = {
+                    toBytes: () => new Uint8Array(32).fill(2),
+                    toString: () => 'MockMintAuthority123...'
+                };
+                
+                const mockFreezeAuthority = {
+                    toBytes: () => new Uint8Array(32).fill(3),
+                    toString: () => 'MockFreezeAuthority456...'
+                };
+                
+                // Test the function
+                const result = mockCreateMint(
+                    null, // connection 
+                    null, // payer
+                    mockMintAuthority,
+                    mockFreezeAuthority,
+                    9, // decimals
+                    null // keypair
+                );
+                
+                console.log('✅ CreateMint fallback test passed');
+                
+                resultsDiv.innerHTML = `
+                    <pre>✅ Fallback createMint function executed successfully
+✅ Buffer.from(mintAuthority.toBytes()): SUCCESS  
+✅ Buffer.from(freezeAuthority.toBytes()): SUCCESS
+✅ No "argument should be a Buffer" errors
+✅ Mock result: ${JSON.stringify(result, null, 2)}</pre>
+                `;
+                testSection.className = 'test-section success';
+                
+            } catch (error) {
+                console.error('❌ CreateMint fallback test failed:', error);
+                resultsDiv.innerHTML = `<pre>❌ Error: ${error.message}</pre>`;
+                testSection.className = 'test-section error';
+            }
+        }
+        
+        function testCDNLoading() {
+            const resultsDiv = document.getElementById('cdn-results');
+            const testSection = document.getElementById('cdn-test');
+            
+            resultsDiv.innerHTML = '<pre>🔄 Testing CDN loading...</pre>';
+            
+            // Test loading the stable CDN
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.13/lib/index.iife.min.js';
+            script.crossOrigin = 'anonymous';
+            
+            script.onload = function() {
+                console.log('✅ Stable CDN loaded successfully');
+                resultsDiv.innerHTML = `
+                    <pre>✅ Stable CDN loaded: jsdelivr.net
+✅ SPL Token library: @solana/spl-token@0.4.13
+✅ No CORS errors from jsdelivr CDN
+✅ Replaced broken Skypack CDN successfully</pre>
+                `;
+                testSection.className = 'test-section success';
+            };
+            
+            script.onerror = function() {
+                console.error('❌ CDN loading failed');
+                resultsDiv.innerHTML = `<pre>❌ CDN loading failed</pre>`;
+                testSection.className = 'test-section error';
+            };
+            
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>

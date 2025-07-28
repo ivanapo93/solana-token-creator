@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Dynamic Meta Tags for Social Sharing -->
+    <title>{{COIN_NAME}} ({{COIN_SYMBOL}}) - Official Token</title>
+    <meta name="description" content="{{COIN_DESCRIPTION}} | Contract Address: {{CONTRACT_ADDRESS}}">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{{COIN_NAME}} ({{COIN_SYMBOL}}) - Official Token">
+    <meta property="og:description" content="{{COIN_DESCRIPTION}}">
+    <meta property="og:image" content="{{COIN_IMAGE_URL}}">
+    <meta property="og:url" content="{{SITE_URL}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{COIN_NAME}} Official">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{COIN_NAME}} ({{COIN_SYMBOL}}) - Official Token">
+    <meta name="twitter:description" content="{{COIN_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{COIN_IMAGE_URL}}">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="{{COIN_SYMBOL}}, {{COIN_NAME}}, Solana, meme token, cryptocurrency, DeFi">
+    <meta name="author" content="{{COIN_NAME}} Team">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{SITE_URL}}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{COIN_IMAGE_URL}}">
+    
+    <!-- Production-ready Tailwind CSS -->
+    <link rel="stylesheet" href="./css/tailwind.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .copy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .coin-image {
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-subtitle { font-size: 1.1rem; }
+            .contract-address { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Hero Section -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <!-- Coin Image -->
+            <div class="mb-8">
+                <img src="{{COIN_IMAGE_URL}}" 
+                     alt="{{COIN_NAME}} Logo" 
+                     class="coin-image floating mx-auto w-32 h-32 md:w-48 md:h-48 object-cover">
+            </div>
+            
+            <!-- Title -->
+            <h1 class="hero-title text-4xl md:text-6xl font-bold text-white mb-4 gradient-text">
+                {{COIN_NAME}}
+            </h1>
+            
+            <!-- Symbol -->
+            <div class="inline-block bg-white bg-opacity-20 rounded-full px-6 py-2 mb-6">
+                <span class="text-2xl md:text-3xl font-bold text-white">${{COIN_SYMBOL}}</span>
+            </div>
+            
+            <!-- Description -->
+            <p class="hero-subtitle text-lg md:text-xl text-white opacity-90 max-w-2xl mx-auto mb-8 leading-relaxed">
+                {{COIN_DESCRIPTION}}
+            </p>
+        </div>
+        
+        <!-- Contract Address Section -->
+        <div class="max-w-4xl mx-auto mb-12">
+            <div class="glass-effect rounded-2xl p-6 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-white text-center mb-6">
+                    📜 Contract Address
+                </h2>
+                
+                <!-- Contract Address Display -->
+                <div class="bg-black bg-opacity-30 rounded-xl p-4 mb-6">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-white text-sm opacity-70 mb-2">Contract Address (CA)</label>
+                            <input type="text" 
+                                   id="contractAddress"
+                                   value="{{CONTRACT_ADDRESS}}"
+                                   readonly
+                                   class="contract-address w-full bg-transparent text-white font-mono text-sm md:text-base p-3 border border-white border-opacity-30 rounded-lg focus:outline-none focus:border-white select-all">
+                        </div>
+                        <button onclick="copyContractAddress()" 
+                                class="copy-button bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy CA
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="https://solscan.io/token/{{CONTRACT_ADDRESS}}" 
+                       target="_blank" 
+                       class="flex items-center justify-center gap-2 bg-blue-600 bg-opacity-80 hover:bg-opacity-100 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
+                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-1a1 1 0 10-2 0v1H5V7h1a1 1 0 000-2H5z"></path>
+                        </svg>
+                        View on Solscan
+                    </a>
+                    
+                    <a href="https://dexscreener.com/solana/{{CONTRACT_ADDRESS}}" 
+                       target="_blank" 
+                       class="flex items-center justify-center gap-2 bg-green-600 bg-opacity-80 hover:bg-opacity-100 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                        DexScreener
+                    </a>
+                    
+                    <a href="https://raydium.io/swap/?inputCurrency=sol&outputCurrency={{CONTRACT_ADDRESS}}" 
+                       target="_blank" 
+                       class="flex items-center justify-center gap-2 bg-purple-600 bg-opacity-80 hover:bg-opacity-100 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                        </svg>
+                        Trade on Raydium
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Feature 1 -->
+            <div class="glass-effect rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Verified Contract</h3>
+                <p class="text-white opacity-80">Fully audited smart contract deployed on Solana blockchain</p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="glass-effect rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Community Driven</h3>
+                <p class="text-white opacity-80">Built by the community, for the community</p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="glass-effect rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Fast & Secure</h3>
+                <p class="text-white opacity-80">Lightning-fast transactions on Solana network</p>
+            </div>
+        </div>
+        
+        <!-- Social Links Section -->
+        {{SOCIAL_LINKS_SECTION}}
+        
+        <!-- Default Sharing (fallback) -->
+        <div class="text-center" id="defaultSocialLinks" style="display: none;">
+            <div class="glass-effect rounded-xl p-6 inline-block">
+                <h3 class="text-xl font-bold text-white mb-4">🚀 Share {{COIN_NAME}}</h3>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <!-- Twitter -->
+                    <a href="https://twitter.com/intent/tweet?text=Check%20out%20{{COIN_NAME}}%20({{COIN_SYMBOL}})%20on%20Solana!%20{{SITE_URL}}" 
+                       target="_blank" 
+                       class="bg-blue-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2">
+                        🐦 Share on X
+                    </a>
+                    
+                    <!-- Discord -->
+                    <button onclick="copyToDiscord()" 
+                            class="bg-indigo-600 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2">
+                        💬 Copy for Discord
+                    </button>
+                    
+                    <!-- Telegram -->
+                    <a href="https://t.me/share/url?url={{SITE_URL}}&text=Check%20out%20{{COIN_NAME}}%20({{COIN_SYMBOL}})%20on%20Solana!" 
+                       target="_blank" 
+                       class="bg-blue-400 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2">
+                        ✈️ Share on Telegram
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-12 text-center">
+            <p class="text-white opacity-60 text-sm">
+                Created with 💜 on Solana • Generated by SolMeme Creator
+            </p>
+            <p class="text-white opacity-40 text-xs mt-2">
+                {{GENERATION_DATE}}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300">
+        ✅ Copied to clipboard!
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // Copy contract address to clipboard
+        function copyContractAddress() {
+            const addressInput = document.getElementById('contractAddress');
+            addressInput.select();
+            addressInput.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(addressInput.value).then(() => {
+                showToast('Contract address copied!');
+            }).catch(() => {
+                // Fallback for older browsers
+                document.execCommand('copy');
+                showToast('Contract address copied!');
+            });
+        }
+        
+        // Copy formatted message for Discord
+        function copyToDiscord() {
+            const message = `🚀 **{{COIN_NAME}} ({{COIN_SYMBOL}})**\n\n{{COIN_DESCRIPTION}}\n\n📜 **Contract Address:**\n\`{{CONTRACT_ADDRESS}}\`\n\n🔗 **Official Site:** {{SITE_URL}}\n\n#Solana #Meme #Crypto`;
+            
+            navigator.clipboard.writeText(message).then(() => {
+                showToast('Discord message copied!');
+            }).catch(() => {
+                showToast('Please copy manually');
+            });
+        }
+        
+        // Copy website URL
+        function copyWebsiteUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Website URL copied!');
+            }).catch(() => {
+                showToast('Please copy manually');
+            });
+        }
+        
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        // Auto-select contract address on click
+        document.getElementById('contractAddress').addEventListener('click', function() {
+            this.select();
+        });
+        
+        // Keyboard shortcut for copying (Ctrl+C or Cmd+C)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                const selection = window.getSelection().toString();
+                if (!selection) {
+                    copyContractAddress();
+                    e.preventDefault();
+                }
+            }
+        });
+        
+        // Analytics tracking (placeholder)
+        function trackEvent(event, data) {
+            console.log('Event:', event, data);
+            // Add your analytics tracking here
+        }
+        
+        // Track button clicks
+        document.querySelectorAll('a, button').forEach(element => {
+            element.addEventListener('click', function() {
+                trackEvent('click', {
+                    element: this.textContent.trim(),
+                    href: this.href || 'button'
+                });
+            });
+        });
+        
+        // Page load analytics
+        trackEvent('page_view', {
+            coin: '{{COIN_SYMBOL}}',
+            timestamp: new Date().toISOString()
+        });
+    </script>
+</body>
+</html>

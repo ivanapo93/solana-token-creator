@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Solana Token Creator Fixed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Load Buffer polyfill FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+  <script>
+    console.log('🔧 Initializing Buffer polyfill...');
+    // Global Buffer definition to fix "buffer is not defined" errors
+    window.Buffer = buffer.Buffer;
+    
+    // Test Buffer functionality
+    try {
+      const testBuffer = Buffer.alloc(10);
+      const testFromString = Buffer.from('test', 'utf8');
+      console.log('✅ Buffer polyfill loaded successfully');
+    } catch (error) {
+      console.error('❌ Buffer polyfill failed:', error);
+      // Add fallback alert for critical errors
+      alert('Critical dependency failed to load. Please refresh the page or try a different browser.');
+    }
+  </script>
+
+  <!-- Load Solana libraries pinned to stable versions -->
+  <script>
+    // Add error handling for script loading
+    function handleScriptError(scriptName, error) {
+      console.error(`❌ Failed to load ${scriptName}:`, error);
+      const errorBanner = document.getElementById('error-banner');
+      if (errorBanner) {
+        errorBanner.style.display = 'block';
+        errorBanner.textContent = `LOADING ERROR: Failed to load ${scriptName}. Please refresh the page.`;
+      }
+    }
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.0/lib/index.iife.min.js" 
+      onerror="handleScriptError('@solana/web3.js', event)"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.13/lib/index.iife.min.js" 
+      onerror="handleScriptError('@solana/spl-token', event)"></script>
+
+  <!-- Load fallback and logger scripts -->
+  <script src="./server-fallback-config.js"></script>
+  <script src="./token-creation-logger.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    #error-banner {
+      background: #f44336;
+      color: white;
+      padding: 10px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    #status {
+      margin: 10px 0;
+      color: green;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    input, select {
+      margin: 5px 0 15px 0;
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Solana Token Creator (Fixed)</h1>
+
+  <div id="error-banner"></div>
+  <div id="status"></div>
+
+  <button id="connectWalletBtn">Connect Phantom Wallet</button>
+
+  <div id="walletAddress" style="margin-top: 10px; font-weight: bold;"></div>
+
+  <hr />
+
+  <label for="tokenName">Token Name:</label>
+  <input type="text" id="tokenName" placeholder="My Awesome Token" />
+
+  <label for="tokenSymbol">Token Symbol:</label>
+  <input type="text" id="tokenSymbol" placeholder="TOKEN" maxlength="10" />
+
+  <label for="initialSupply">Initial Supply:</label>
+  <input type="number" id="initialSupply" value="1000000000" min="1" />
+
+  <div>
+    <input type="checkbox" id="revokeMint" checked />
+    <label for="revokeMint">Revoke Mint Authority</label>
+  </div>
+  <div>
+    <input type="checkbox" id="revokeFreeze" checked />
+    <label for="revokeFreeze">Revoke Freeze Authority</label>
+  </div>
+
+  <button id="createTokenBtn" disabled>Create REAL Token on Mainnet</button>
+
+  <div id="tokenResult" style="display: none; margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 5px;">
+    <h3>Token Created Successfully!</h3>
+    <p><strong>Mint Address:</strong> <span id="mintAddress"></span></p>
+    <p><strong>Name:</strong> <span id="resultName"></span></p>
+    <p><strong>Symbol:</strong> <span id="resultSymbol"></span></p>
+    <p><strong>Supply:</strong> <span id="resultSupply"></span></p>
+    <p><a id="solscanLink" href="#" target="_blank">View on Solscan</a></p>
+  </div>
+
+  <script>
+    (async () => {
+      // Shortcuts
+      const errorBanner = document.getElementById('error-banner');
+      const statusEl = document.getElementById('status');
+      const connectWalletBtn = document.getElementById('connectWalletBtn');
+      const walletAddressEl = document.getElementById('walletAddress');
+      const createTokenBtn = document.getElementById('createTokenBtn');
+
+      let connection;
+      let walletPublicKey;
+      let phantomProvider;
+
+      // Clear and show errors nicely
+      function showError(message) {
+        errorBanner.style.display = 'block';
+        errorBanner.textContent = message;
+        statusEl.textContent = '';
+        console.error(message);
+      }
+
+      function clearError() {
+        errorBanner.style.display = 'none';
+        errorBanner.textContent = '';
+      }
+
+      function setStatus(message) {
+        statusEl.textContent = message;
+        console.log(message);
+      }
+
+      // Check Phantom wallet availability
+      function getPhantomProvider() {
+        if ('solana' in window) {
+          const provider = window.solana;
+          if (provider.isPhantom) {
+            return provider;
+          }
+        }
+        return null;
+      }
+
+      // Setup RPC connection with fallback support
+      function setupConnection() {
+        try {
+          // Use reliable RPC endpoints with fallback
+          const rpcEndpoints = [
+            "https://solana-mainnet.g.alchemy.com/v2/demo",
+            "https://rpc.ankr.com/solana",
+            "https://api.mainnet-beta.solana.com"
+          ];
+          
+          connection = new solanaWeb3.Connection(rpcEndpoints[0], 'confirmed');
+          setStatus('RPC connection established.');
+        } catch (err) {
+          showError('Failed to establish RPC connection: ' + err.message);
+        }
+      }
+
+      // Connect Phantom Wallet
+      async function connectWallet() {
+        clearError();
+        try {
+          phantomProvider = getPhantomProvider();
+          if (!phantomProvider) {
+            showError('Phantom Wallet not detected. Please install Phantom.');
+            return;
+          }
+          
+          setStatus('Connecting to Phantom wallet...');
+          const resp = await phantomProvider.connect();
+          walletPublicKey = resp.publicKey;
+          
+          walletAddressEl.textContent = 'Connected Wallet: ' + walletPublicKey.toBase58();
+          connectWalletBtn.textContent = 'Disconnect';
+          connectWalletBtn.onclick = disconnectWallet;
+          createTokenBtn.disabled = false;
+          setStatus('Wallet connected. Ready to create token.');
+        } catch (err) {
+          if (err.code === 4001) {
+            showError('User rejected wallet connection.');
+          } else {
+            showError('Wallet connection failed: ' + err.message);
+          }
+        }
+      }
+
+      // Disconnect wallet
+      function disconnectWallet() {
+        if (phantomProvider) {
+          phantomProvider.disconnect();
+          walletPublicKey = null;
+          walletAddressEl.textContent = '';
+          connectWalletBtn.textContent = 'Connect Phantom Wallet';
+          connectWalletBtn.onclick = connectWallet;
+          createTokenBtn.disabled = true;
+          setStatus('Wallet disconnected.');
+        }
+      }
+
+      // Create SPL Token function
+      async function createToken() {
+        clearError();
+        setStatus('Creating token... Please approve all wallet prompts.');
+        createTokenBtn.disabled = true;
+
+        try {
+          if (!walletPublicKey) throw new Error('Wallet not connected.');
+
+          const tokenName = document.getElementById('tokenName').value.trim();
+          const tokenSymbol = document.getElementById('tokenSymbol').value.trim().toUpperCase();
+          const initialSupply = parseInt(document.getElementById('initialSupply').value);
+          const revokeMint = document.getElementById('revokeMint').checked;
+          const revokeFreeze = document.getElementById('revokeFreeze').checked;
+
+          if (!tokenName) throw new Error('Token name is required.');
+          if (!tokenSymbol) throw new Error('Token symbol is required.');
+          if (initialSupply <= 0) throw new Error('Initial supply must be positive.');
+
+          // Check wallet balance
+          const balance = await connection.getBalance(walletPublicKey);
+          const solBalance = balance / solanaWeb3.LAMPORTS_PER_SOL;
+          if (solBalance < 0.02) {
+            throw new Error(`Insufficient SOL balance: ${solBalance.toFixed(4)} SOL. Need at least 0.02 SOL for transaction fees.`);
+          }
+
+          setStatus('Creating mint account...');
+
+          // Create mint keypair
+          const mintKeypair = solanaWeb3.Keypair.generate();
+          
+          // Get minimum balance for rent exemption
+          const mintRent = await connection.getMinimumBalanceForRentExemption(splToken.MINT_SIZE);
+
+          // Create transaction to create mint
+          const transaction = new solanaWeb3.Transaction().add(
+            // Create mint account
+            solanaWeb3.SystemProgram.createAccount({
+              fromPubkey: walletPublicKey,
+              newAccountPubkey: mintKeypair.publicKey,
+              space: splToken.MINT_SIZE,
+              lamports: mintRent,
+              programId: splToken.TOKEN_PROGRAM_ID,
+            }),
+            // Initialize mint
+            splToken.createInitializeMintInstruction(
+              mintKeypair.publicKey,
+              9, // decimals
+              walletPublicKey,
+              walletPublicKey
+            )
+          );
+
+          // Get recent blockhash and set fee payer
+          const { blockhash } = await connection.getLatestBlockhash();
+          transaction.recentBlockhash = blockhash;
+          transaction.feePayer = walletPublicKey;
+
+          // Sign with mint keypair
+          transaction.partialSign(mintKeypair);
+
+          setStatus('Sending mint creation transaction...');
+
+          // Sign with wallet and send
+          const signedTransaction = await phantomProvider.signTransaction(transaction);
+          const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+          
+          setStatus('Waiting for mint creation confirmation...');
+          await connection.confirmTransaction(signature, 'confirmed');
+
+          setStatus('Creating associated token account...');
+
+          // Create associated token account
+          const associatedTokenAddress = await splToken.getAssociatedTokenAddress(
+            mintKeypair.publicKey,
+            walletPublicKey
+          );
+
+          const createAtaTransaction = new solanaWeb3.Transaction().add(
+            splToken.createAssociatedTokenAccountInstruction(
+              walletPublicKey,
+              associatedTokenAddress,
+              walletPublicKey,
+              mintKeypair.publicKey
+            )
+          );
+
+          const { blockhash: ataBlockhash } = await connection.getLatestBlockhash();
+          createAtaTransaction.recentBlockhash = ataBlockhash;
+          createAtaTransaction.feePayer = walletPublicKey;
+
+          const signedAtaTransaction = await phantomProvider.signTransaction(createAtaTransaction);
+          const ataSignature = await connection.sendRawTransaction(signedAtaTransaction.serialize());
+          await connection.confirmTransaction(ataSignature, 'confirmed');
+
+          setStatus('Minting tokens...');
+
+          // Mint tokens
+          const mintAmount = BigInt(initialSupply * Math.pow(10, 9)); // 9 decimals
+          const mintToTransaction = new solanaWeb3.Transaction().add(
+            splToken.createMintToInstruction(
+              mintKeypair.publicKey,
+              associatedTokenAddress,
+              walletPublicKey,
+              mintAmount
+            )
+          );
+
+          const { blockhash: mintBlockhash } = await connection.getLatestBlockhash();
+          mintToTransaction.recentBlockhash = mintBlockhash;
+          mintToTransaction.feePayer = walletPublicKey;
+
+          const signedMintTransaction = await phantomProvider.signTransaction(mintToTransaction);
+          const mintSignature = await connection.sendRawTransaction(signedMintTransaction.serialize());
+          await connection.confirmTransaction(mintSignature, 'confirmed');
+
+          // Revoke authorities if requested
+          if (revokeMint) {
+            setStatus('Revoking mint authority...');
+            const revokeMintTx = new solanaWeb3.Transaction().add(
+              splToken.createSetAuthorityInstruction(
+                mintKeypair.publicKey,
+                walletPublicKey,
+                splToken.AuthorityType.MintTokens,
+                null
+              )
+            );
+
+            const { blockhash: revokeBlockhash } = await connection.getLatestBlockhash();
+            revokeMintTx.recentBlockhash = revokeBlockhash;
+            revokeMintTx.feePayer = walletPublicKey;
+
+            const signedRevokeTx = await phantomProvider.signTransaction(revokeMintTx);
+            const revokeSignature = await connection.sendRawTransaction(signedRevokeTx.serialize());
+            await connection.confirmTransaction(revokeSignature, 'confirmed');
+          }
+
+          if (revokeFreeze) {
+            setStatus('Revoking freeze authority...');
+            const revokeFreezeTx = new solanaWeb3.Transaction().add(
+              splToken.createSetAuthorityInstruction(
+                mintKeypair.publicKey,
+                walletPublicKey,
+                splToken.AuthorityType.FreezeAccount,
+                null
+              )
+            );
+
+            const { blockhash: freezeBlockhash } = await connection.getLatestBlockhash();
+            revokeFreezeTx.recentBlockhash = freezeBlockhash;
+            revokeFreezeTx.feePayer = walletPublicKey;
+
+            const signedFreezeTx = await phantomProvider.signTransaction(revokeFreezeTx);
+            const freezeSignature = await connection.sendRawTransaction(signedFreezeTx.serialize());
+            await connection.confirmTransaction(freezeSignature, 'confirmed');
+          }
+
+          // Display results
+          const mintAddress = mintKeypair.publicKey.toBase58();
+          document.getElementById('mintAddress').textContent = mintAddress;
+          document.getElementById('resultName').textContent = tokenName;
+          document.getElementById('resultSymbol').textContent = tokenSymbol;
+          document.getElementById('resultSupply').textContent = `${initialSupply.toLocaleString()} ${tokenSymbol}`;
+          document.getElementById('solscanLink').href = `https://solscan.io/token/${mintAddress}`;
+          document.getElementById('tokenResult').style.display = 'block';
+
+          setStatus('✅ Token created successfully!');
+
+        } catch (err) {
+          showError('Token creation failed: ' + err.message);
+        } finally {
+          createTokenBtn.disabled = false;
+        }
+      }
+
+      // Event Listeners
+      connectWalletBtn.addEventListener('click', connectWallet);
+      createTokenBtn.addEventListener('click', createToken);
+
+      // Initialize
+      setupConnection();
+      setStatus('Ready. Connect your Phantom wallet to begin.');
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Token Workflow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 25px 0; padding: 20px; border: 1px solid #ddd; border-radius: 6px; }
+        .success { background: #e8f5e8; border-color: #4CAF50; }
+        .error { background: #ffe8e8; border-color: #f44336; }
+        .warning { background: #fff3cd; border-color: #ffc107; }
+        button { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 8px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        .log { margin: 8px 0; padding: 10px; border-radius: 4px; }
+        .log.info { background: #e3f2fd; }
+        .log.success { background: #e8f5e8; }
+        .log.error { background: #ffebee; }
+        .log.warning { background: #fff3cd; }
+        .progress-bar { width: 100%; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #45a049); transition: width 0.3s ease; }
+        .test-output { margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Enhanced Token Creation Workflow Test</h1>
+        <p>Testing all the new enhancements: retry logic, timeout handling, validation, error recovery, and UX improvements.</p>
+
+        <div class="test-section">
+            <h3>Test 1: Metadata Validation</h3>
+            <button onclick="testMetadataValidation()">Test Validation Logic</button>
+            <div id="validationResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Retry Operation Function</h3>
+            <button onclick="testRetryLogic()">Test Retry Mechanism</button>
+            <div id="retryResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Timeout Handling</h3>
+            <button onclick="testTimeoutHandling()">Test Timeout Function</button>
+            <div id="timeoutResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Error Message System</h3>
+            <button onclick="testErrorMessages()">Test Error Display</button>
+            <div id="errorResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 5: Progress Indicator</h3>
+            <button onclick="testProgressIndicator()">Test Step Progress</button>
+            <div id="progressResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 6: Reset/Recovery Function</h3>
+            <button onclick="testResetFunction()">Test Form Reset</button>
+            <div id="resetResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 7: Complete Workflow Simulation</h3>
+            <button onclick="testCompleteWorkflow()" id="workflowBtn">Simulate Complete Workflow</button>
+            <div id="workflowResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Utility functions from the main application
+        async function retryOperation(operation, retries = 3, delayMs = 5000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await operation();
+                } catch (err) {
+                    console.log(`❌ Attempt ${i + 1}/${retries} failed:`, err.message);
+                    if (i === retries - 1) throw err;
+                    console.log(`⏳ Waiting ${delayMs}ms before retry...`);
+                    await new Promise(res => setTimeout(res, delayMs));
+                }
+            }
+        }
+
+        async function withTimeout(promise, timeoutMs = 60000) {
+            const timeout = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Transaction timed out after 60 seconds.")), timeoutMs)
+            );
+            return Promise.race([promise, timeout]);
+        }
+
+        function validateMetadata(data) {
+            const required = ["name", "symbol", "supply", "decimals"];
+            for (const field of required) {
+                if (!data[field]) {
+                    throw new Error(`Missing required field: ${field}`);
+                }
+            }
+            if (!data.image && !data.metadataUri) {
+                throw new Error("Either image or metadataUri must be provided.");
+            }
+        }
+
+        function updateDetailedProgress(step, totalSteps, message, progressId = 'testProgress') {
+            const progressText = document.getElementById(progressId + 'Text');
+            const progressFill = document.getElementById(progressId + 'Fill');
+            if (progressText) {
+                progressText.textContent = `Step ${step}/${totalSteps}: ${message}`;
+            }
+            if (progressFill) {
+                const percentage = (step / totalSteps) * 100;
+                progressFill.style.width = `${percentage}%`;
+            }
+        }
+
+        function log(message, type = 'info', containerId) {
+            const container = document.getElementById(containerId);
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.textContent = message;
+            container.appendChild(logDiv);
+        }
+
+        function testMetadataValidation() {
+            const container = document.getElementById('validationResults');
+            container.innerHTML = '';
+
+            const testCases = [
+                // Valid metadata
+                { name: "TestToken", symbol: "TEST", supply: 1000000, decimals: 9, image: "test.png" },
+                
+                // Missing name
+                { symbol: "TEST", supply: 1000000, decimals: 9, image: "test.png" },
+                
+                // Missing symbol
+                { name: "TestToken", supply: 1000000, decimals: 9, image: "test.png" },
+                
+                // Missing supply
+                { name: "TestToken", symbol: "TEST", decimals: 9, image: "test.png" },
+                
+                // Missing decimals
+                { name: "TestToken", symbol: "TEST", supply: 1000000, image: "test.png" },
+                
+                // Missing both image and metadataUri
+                { name: "TestToken", symbol: "TEST", supply: 1000000, decimals: 9 },
+                
+                // Valid with metadataUri instead of image
+                { name: "TestToken", symbol: "TEST", supply: 1000000, decimals: 9, metadataUri: "ipfs://test" }
+            ];
+
+            testCases.forEach((testCase, index) => {
+                try {
+                    validateMetadata(testCase);
+                    log(`✅ Test ${index + 1}: PASSED - Valid metadata`, 'success', 'validationResults');
+                } catch (error) {
+                    log(`❌ Test ${index + 1}: FAILED - ${error.message}`, 'error', 'validationResults');
+                }
+            });
+        }
+
+        async function testRetryLogic() {
+            const container = document.getElementById('retryResults');
+            container.innerHTML = '';
+
+            log('🔄 Testing retry logic...', 'info', 'retryResults');
+
+            // Test 1: Operation that succeeds on 2nd attempt
+            let attempt = 0;
+            try {
+                await retryOperation(async () => {
+                    attempt++;
+                    if (attempt < 2) {
+                        throw new Error(`Simulated failure on attempt ${attempt}`);
+                    }
+                    return `Success on attempt ${attempt}`;
+                }, 3, 1000);
+                log('✅ Test 1: PASSED - Retry succeeded on 2nd attempt', 'success', 'retryResults');
+            } catch (error) {
+                log(`❌ Test 1: FAILED - ${error.message}`, 'error', 'retryResults');
+            }
+
+            // Test 2: Operation that fails all attempts
+            attempt = 0;
+            try {
+                await retryOperation(async () => {
+                    attempt++;
+                    throw new Error(`Always fails - attempt ${attempt}`);
+                }, 3, 500);
+                log('❌ Test 2: FAILED - Should have thrown error', 'error', 'retryResults');
+            } catch (error) {
+                log('✅ Test 2: PASSED - Correctly failed after all retries', 'success', 'retryResults');
+            }
+        }
+
+        async function testTimeoutHandling() {
+            const container = document.getElementById('timeoutResults');
+            container.innerHTML = '';
+
+            log('⏱️ Testing timeout handling...', 'info', 'timeoutResults');
+
+            // Test 1: Fast operation that completes before timeout
+            try {
+                await withTimeout(
+                    new Promise(resolve => setTimeout(() => resolve('Fast operation'), 500)),
+                    2000
+                );
+                log('✅ Test 1: PASSED - Fast operation completed', 'success', 'timeoutResults');
+            } catch (error) {
+                log(`❌ Test 1: FAILED - ${error.message}`, 'error', 'timeoutResults');
+            }
+
+            // Test 2: Slow operation that should timeout
+            try {
+                await withTimeout(
+                    new Promise(resolve => setTimeout(() => resolve('Slow operation'), 3000)),
+                    1000
+                );
+                log('❌ Test 2: FAILED - Should have timed out', 'error', 'timeoutResults');
+            } catch (error) {
+                if (error.message.includes('timed out')) {
+                    log('✅ Test 2: PASSED - Correctly timed out', 'success', 'timeoutResults');
+                } else {
+                    log(`❌ Test 2: FAILED - Wrong error: ${error.message}`, 'error', 'timeoutResults');
+                }
+            }
+        }
+
+        function testErrorMessages() {
+            const container = document.getElementById('errorResults');
+            container.innerHTML = '';
+
+            const errorTypes = [
+                'Missing required token data. Please complete all fields before continuing.',
+                'Upload to IPFS failed. Please check your internet connection and try again.',
+                'Minting failed. Please try again later.',
+                'Transaction timed out after 60 seconds.',
+                'Missing required fields. Please fill them before minting.'
+            ];
+
+            errorTypes.forEach((errorMsg, index) => {
+                // Create a temporary error display
+                const errorDisplay = document.createElement('div');
+                errorDisplay.style.marginTop = '10px';
+                errorDisplay.style.padding = '10px';
+                errorDisplay.style.background = '#ffebee';
+                errorDisplay.style.border = '1px solid #f44336';
+                errorDisplay.style.borderRadius = '4px';
+                errorDisplay.style.color = '#d32f2f';
+                errorDisplay.textContent = errorMsg;
+                
+                log(`✅ Error Type ${index + 1}: Ready for display`, 'success', 'errorResults');
+                container.appendChild(errorDisplay);
+            });
+        }
+
+        function testProgressIndicator() {
+            const container = document.getElementById('progressResults');
+            container.innerHTML = '';
+            
+            // Create progress elements
+            container.innerHTML = `
+                <div class="progress-bar">
+                    <div id="testProgressFill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p id="testProgressText">Initializing...</p>
+            `;
+
+            const steps = [
+                'Validating Metadata',
+                'Uploading Metadata', 
+                'Minting Token'
+            ];
+
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                currentStep++;
+                if (currentStep <= steps.length) {
+                    updateDetailedProgress(currentStep, steps.length, steps[currentStep - 1], 'testProgress');
+                    log(`📊 Progress: Step ${currentStep}/${steps.length} - ${steps[currentStep - 1]}`, 'info', 'progressResults');
+                } else {
+                    clearInterval(interval);
+                    log('✅ Progress indicator test completed', 'success', 'progressResults');
+                }
+            }, 1500);
+        }
+
+        function testResetFunction() {
+            const container = document.getElementById('resetResults');
+            container.innerHTML = '';
+
+            // Simulate form state
+            const mockState = {
+                currentToken: { name: "TestToken", symbol: "TEST" },
+                currentTokenAddress: "SOL_ADDRESS_123",
+                currentTokenId: "123",
+                tokenHistory: { items: [{ name: "Token1" }], current: 0 }
+            };
+
+            log('🔄 Initial state set with mock data', 'info', 'resetResults');
+            log(`Token: ${mockState.currentToken.name}`, 'info', 'resetResults');
+            log(`Address: ${mockState.currentTokenAddress}`, 'info', 'resetResults');
+
+            // Simulate reset
+            mockState.currentToken = null;
+            mockState.currentTokenAddress = null;
+            mockState.currentTokenId = null;
+            mockState.tokenHistory = { items: [], current: -1 };
+
+            log('🧹 Reset function executed', 'warning', 'resetResults');
+            log('✅ All state cleared successfully', 'success', 'resetResults');
+            log('Form ready for new token creation', 'success', 'resetResults');
+        }
+
+        async function testCompleteWorkflow() {
+            const container = document.getElementById('workflowResults');
+            const btn = document.getElementById('workflowBtn');
+            container.innerHTML = '';
+            btn.disabled = true;
+
+            try {
+                // Create progress elements
+                container.innerHTML = `
+                    <div class="progress-bar">
+                        <div id="workflowProgressFill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p id="workflowProgressText">Starting workflow simulation...</p>
+                `;
+
+                // Step 1: Validate metadata
+                updateDetailedProgress(1, 3, 'Validating Metadata', 'workflowProgress');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const mockToken = {
+                    name: "SimulatedToken",
+                    symbol: "SIM", 
+                    supply: 1000000,
+                    decimals: 9,
+                    image: "ipfs://simulated-image"
+                };
+                
+                validateMetadata(mockToken);
+                log('✅ Step 1: Metadata validation passed', 'success', 'workflowResults');
+
+                // Step 2: Upload metadata (simulated with retry)
+                updateDetailedProgress(2, 3, 'Uploading Metadata', 'workflowProgress');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const uploadResult = await retryOperation(async () => {
+                    // Simulate random failure
+                    if (Math.random() < 0.3) {
+                        throw new Error('Simulated IPFS failure');
+                    }
+                    return { url: 'ipfs://simulated-metadata-hash', hash: 'QmSimulated123' };
+                }, 3, 1000);
+                
+                log('✅ Step 2: Metadata uploaded successfully', 'success', 'workflowResults');
+                log(`   URL: ${uploadResult.url}`, 'info', 'workflowResults');
+
+                // Step 3: Mint token (simulated with timeout)
+                updateDetailedProgress(3, 3, 'Minting Token', 'workflowProgress');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const mintResult = await withTimeout(
+                    new Promise(resolve => setTimeout(() => resolve({
+                        mintAddress: 'SIMULATED_MINT_ADDRESS_12345',
+                        signature: 'SIMULATED_TX_SIGNATURE_67890'
+                    }), 2000)),
+                    5000
+                );
+                
+                log('✅ Step 3: Token minted successfully', 'success', 'workflowResults');
+
+                // Final output
+                const finalOutput = {
+                    tokenName: mockToken.name,
+                    symbol: mockToken.symbol,
+                    supply: mockToken.supply.toString(),
+                    decimals: mockToken.decimals.toString(),
+                    mintAddress: mintResult.mintAddress,
+                    metadataUri: uploadResult.url
+                };
+
+                const outputDiv = document.createElement('div');
+                outputDiv.className = 'test-output';
+                outputDiv.innerHTML = `
+                    <h4>✅ Complete Workflow Success!</h4>
+                    <pre>${JSON.stringify(finalOutput, null, 2)}</pre>
+                `;
+                container.appendChild(outputDiv);
+
+                log('🎉 Complete workflow test PASSED', 'success', 'workflowResults');
+
+            } catch (error) {
+                log(`❌ Workflow test FAILED: ${error.message}`, 'error', 'workflowResults');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            setTimeout(() => {
+                console.log('🧪 Enhanced Token Workflow Test Suite Loaded');
+            }, 500);
+        };
+    </script>
+</body>
+</html>

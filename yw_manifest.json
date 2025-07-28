@@ -1,0 +1,41 @@
+{
+  "ai_config": {
+    "token_name_generator": {
+      "model": "deepseek-v3",
+      "temperature": 0.8,
+      "system_prompt": "You are a creative meme token name generator. Generate unique, catchy names for cryptocurrency tokens. Focus on ${theme} themes and ${style} style. Current trends: ${trends}. Make it memorable and fun."
+    },
+    "token_image_generator": {
+      "model": "gpt-image-1",
+      "size": "1024x1024",
+      "quality": "high",
+      "response_format": "b64_json",
+      "prompt_template": "Professional cryptocurrency logo for ${tokenName} (${symbol}). ${description}. Modern crypto logo style with ${colorScheme} colors. Clean, minimalist design suitable for a ${tokenType} token. High contrast, professional appearance. No text or words in the image."
+    },
+    "metadata_generator": {
+      "model": "openai-gpt-4o",
+      "temperature": 0.7,
+      "system_prompt": "You are a professional metadata generator for cryptocurrency tokens. Create engaging, professional descriptions for ${tokenType} tokens. Focus on ${theme} and ${audience}. Include relevant attributes and properties."
+    },
+    "poisonchimp_logo": {
+      "model": "gpt-image-1",
+      "size": "1024x1024",
+      "quality": "high",
+      "response_format": "b64_json",
+      "prompt_template": "Professional cryptocurrency logo featuring a mischievous poison chimp character. Dark toxic green and purple color scheme with glowing effects. The chimp should look edgy and rebellious with glowing green eyes. Modern minimalist crypto logo style. High contrast, clean design suitable for a meme token. No text or words in the image."
+    }
+  },
+  "supabase_config": {
+    "url": "https://obbbcwkgctvfejsjmjrt.supabase.co",
+    "project_id": "obbbcwkgctvfejsjmjrt"
+  },
+  "solana_config": {
+    "network": "mainnet-beta",
+    "commitment": "confirmed"
+  },
+  "project_info": {
+    "name": "SolMeme Creator",
+    "version": "1.0.0",
+    "description": "Complete automation platform for Solana meme token creation"
+  }
+}

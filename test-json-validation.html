@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Validation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        .success { background: #e8f5e8; border-color: #4CAF50; }
+        .error { background: #ffe8e8; border-color: #f44336; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .log { margin: 5px 0; padding: 8px; border-radius: 4px; }
+        .log.info { background: #e3f2fd; }
+        .log.success { background: #e8f5e8; }
+        .log.error { background: #ffebee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 JSON Formatting Validation Test</h1>
+        <p>Testing the corrected JSON generation and validation logic from the AI token creation workflow.</p>
+
+        <div class="test-section">
+            <h3>Test 1: AI Response Parsing with Different Formats</h3>
+            <button onclick="testAIResponseParsing()">Run AI Response Tests</button>
+            <div id="aiResponseResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Metadata JSON Generation</h3>
+            <button onclick="testMetadataGeneration()">Run Metadata Tests</button>
+            <div id="metadataResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Social Links JSON Validation</h3>
+            <button onclick="testSocialLinksValidation()">Run Social Links Tests</button>
+            <div id="socialLinksResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Expected Output Format Validation</h3>
+            <button onclick="testExpectedFormat()">Validate Expected Format</button>
+            <div id="expectedFormatResults"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info', containerId) {
+            const container = document.getElementById(containerId);
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.textContent = message;
+            container.appendChild(logDiv);
+        }
+
+        function testAIResponseParsing() {
+            const container = document.getElementById('aiResponseResults');
+            container.innerHTML = '';
+
+            const testCases = [
+                // Valid JSON
+                '{"name": "GhostBaboon", "symbol": "GHBA", "concept": "A spooky primate meme", "style": "cartoon"}',
+                
+                // JSON with markdown code blocks
+                '```json\n{"name": "CryptoCat", "symbol": "CCAT", "concept": "Feline blockchain ruler", "style": "modern"}\n```',
+                
+                // JSON with extra backticks
+                '```\n{"name": "MoonDoge", "symbol": "MDOGE", "concept": "Space traveling dog", "style": "retro"}\n```',
+                
+                // Invalid JSON - missing quotes
+                '{name: "TestToken", symbol: "TEST", concept: "Test token", style: "minimal"}',
+                
+                // Invalid JSON - trailing comma
+                '{"name": "BadToken", "symbol": "BAD", "concept": "Invalid format", "style": "broken",}',
+                
+                // Empty response
+                '',
+                
+                // Non-JSON response
+                'This is not JSON at all, just text response'
+            ];
+
+            log('🔍 Testing AI Response Parsing Logic...', 'info', 'aiResponseResults');
+
+            testCases.forEach((testCase, index) => {
+                try {
+                    log(`\nTest ${index + 1}: Testing response parsing...`, 'info', 'aiResponseResults');
+                    
+                    // Simulate the improved parsing logic
+                    let cleanText = testCase.trim();
+                    if (cleanText.startsWith('```json')) {
+                        cleanText = cleanText.replace(/```json\s*/, '').replace(/```\s*$/, '');
+                    }
+                    if (cleanText.startsWith('```')) {
+                        cleanText = cleanText.replace(/```\s*/, '').replace(/```\s*$/, '');
+                    }
+                    
+                    const result = JSON.parse(cleanText);
+                    
+                    // Validate required fields
+                    if (!result || typeof result !== 'object') {
+                        throw new Error(`Invalid concept format - expected object, got ${typeof result}`);
+                    }
+                    
+                    if (!result.name || !result.symbol || !result.concept) {
+                        const missingFields = [];
+                        if (!result.name) missingFields.push('name');
+                        if (!result.symbol) missingFields.push('symbol');
+                        if (!result.concept) missingFields.push('concept');
+                        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                    }
+                    
+                    log(`✅ Test ${index + 1}: SUCCESS - Parsed: ${result.name} (${result.symbol})`, 'success', 'aiResponseResults');
+                    
+                } catch (error) {
+                    log(`❌ Test ${index + 1}: FAILED - ${error.message}`, 'error', 'aiResponseResults');
+                    if (testCase.length > 0) {
+                        log(`   Input: ${testCase.substring(0, 100)}${testCase.length > 100 ? '...' : ''}`, 'error', 'aiResponseResults');
+                    }
+                }
+            });
+        }
+
+        function testMetadataGeneration() {
+            const container = document.getElementById('metadataResults');
+            container.innerHTML = '';
+
+            log('🔍 Testing Metadata JSON Generation...', 'info', 'metadataResults');
+
+            const testTokenData = {
+                name: "GhostBaboon",
+                symbol: "GHBA", 
+                concept: "The meme token that will make your portfolio sing and your heart dance.",
+                supply: 1000000000,
+                decimals: 9,
+                socialLinks: {
+                    twitter: "https://twitter.com/ghostbaboon",
+                    telegram: "",
+                    discord: "https://discord.gg/ghostbaboon",
+                    tiktok: "",
+                    instagram: "",
+                    youtube: "",
+                    website: "https://ghostbaboon.com"
+                }
+            };
+
+            try {
+                // Simulate metadata creation
+                const metadata = {
+                    name: testTokenData.name,
+                    symbol: testTokenData.symbol,
+                    description: testTokenData.concept,
+                    image: "https://ipfs.io/ipfs/QmTest123...",
+                    attributes: [
+                        {
+                            trait_type: "Category",
+                            value: "Meme"
+                        },
+                        {
+                            trait_type: "Supply", 
+                            value: testTokenData.supply.toLocaleString()
+                        },
+                        {
+                            trait_type: "Decimals",
+                            value: testTokenData.decimals
+                        }
+                    ]
+                };
+
+                // Add social links
+                if (testTokenData.socialLinks) {
+                    const socialLinks = Object.entries(testTokenData.socialLinks)
+                        .filter(([key, value]) => value && value.trim())
+                        .reduce((acc, [key, value]) => {
+                            acc[key] = value.trim();
+                            return acc;
+                        }, {});
+                    
+                    if (Object.keys(socialLinks).length > 0) {
+                        metadata.extensions = {
+                            social: socialLinks
+                        };
+                        
+                        if (socialLinks.website) {
+                            metadata.external_url = socialLinks.website;
+                        }
+                    }
+                }
+
+                // Validate metadata before JSON stringification
+                if (!metadata.name || !metadata.symbol || !metadata.image) {
+                    throw new Error(`Invalid metadata - missing required fields: ${!metadata.name ? 'name' : ''} ${!metadata.symbol ? 'symbol' : ''} ${!metadata.image ? 'image' : ''}`);
+                }
+
+                // Test JSON stringification
+                const metadataJson = JSON.stringify(metadata, null, 2);
+                
+                log('✅ Metadata JSON generated successfully!', 'success', 'metadataResults');
+                log('📋 Generated Metadata:', 'info', 'metadataResults');
+                
+                const pre = document.createElement('pre');
+                pre.textContent = metadataJson;
+                container.appendChild(pre);
+
+            } catch (error) {
+                log(`❌ Metadata generation failed: ${error.message}`, 'error', 'metadataResults');
+            }
+        }
+
+        function testSocialLinksValidation() {
+            const container = document.getElementById('socialLinksResults');
+            container.innerHTML = '';
+
+            log('🔍 Testing Social Links JSON Validation...', 'info', 'socialLinksResults');
+
+            const testCases = [
+                // Valid social links
+                {
+                    twitter: "https://twitter.com/test",
+                    telegram: "https://t.me/test", 
+                    discord: "https://discord.gg/test",
+                    website: "https://test.com"
+                },
+                
+                // Mixed valid/empty links
+                {
+                    twitter: "https://twitter.com/test",
+                    telegram: "",
+                    discord: "https://discord.gg/test",
+                    tiktok: "",
+                    website: ""
+                },
+                
+                // All empty links
+                {
+                    twitter: "",
+                    telegram: "",
+                    discord: "",
+                    tiktok: "",
+                    instagram: "",
+                    youtube: "",
+                    website: ""
+                },
+
+                // Invalid structure
+                null,
+                
+                // Undefined
+                undefined
+            ];
+
+            testCases.forEach((testCase, index) => {
+                try {
+                    log(`\nTest ${index + 1}: Testing social links validation...`, 'info', 'socialLinksResults');
+                    
+                    let socialLinks = {};
+                    
+                    if (testCase) {
+                        socialLinks = Object.entries(testCase)
+                            .filter(([key, value]) => value && value.trim())
+                            .reduce((acc, [key, value]) => {
+                                acc[key] = value.trim();
+                                return acc;
+                            }, {});
+                    }
+                    
+                    const result = JSON.stringify(socialLinks, null, 2);
+                    log(`✅ Test ${index + 1}: SUCCESS - Valid social links JSON`, 'success', 'socialLinksResults');
+                    log(`   Result: ${Object.keys(socialLinks).length} social links processed`, 'info', 'socialLinksResults');
+                    
+                } catch (error) {
+                    log(`❌ Test ${index + 1}: FAILED - ${error.message}`, 'error', 'socialLinksResults');
+                }
+            });
+        }
+
+        function testExpectedFormat() {
+            const container = document.getElementById('expectedFormatResults');
+            container.innerHTML = '';
+
+            log('🔍 Testing Expected JSON Format...', 'info', 'expectedFormatResults');
+
+            const expectedFormat = {
+                "tokenName": "GhostBaboon",
+                "symbol": "GHBA", 
+                "description": "The meme token that will make your portfolio sing and your heart dance.",
+                "supply": "1000000000",
+                "decimals": "9",
+                "transactionFee": "1",
+                "socialLinks": {
+                    "twitter": "",
+                    "telegram": "",
+                    "discord": "",
+                    "tiktok": "",
+                    "instagram": "",
+                    "youtube": "",
+                    "website": ""
+                }
+            };
+
+            try {
+                // Test JSON stringification
+                const jsonString = JSON.stringify(expectedFormat, null, 2);
+                
+                // Test parsing back
+                const parsed = JSON.parse(jsonString);
+                
+                // Validate structure
+                const requiredFields = ['tokenName', 'symbol', 'description', 'supply', 'decimals'];
+                const missingFields = requiredFields.filter(field => !(field in parsed));
+                
+                if (missingFields.length > 0) {
+                    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                }
+
+                log('✅ Expected format validation passed!', 'success', 'expectedFormatResults');
+                log('📋 Valid JSON Structure:', 'info', 'expectedFormatResults');
+                
+                const pre = document.createElement('pre');
+                pre.textContent = jsonString;
+                container.appendChild(pre);
+
+                log('✅ All JSON operations completed without errors', 'success', 'expectedFormatResults');
+
+            } catch (error) {
+                log(`❌ Expected format validation failed: ${error.message}`, 'error', 'expectedFormatResults');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            setTimeout(() => {
+                testAIResponseParsing();
+                testMetadataGeneration(); 
+                testSocialLinksValidation();
+                testExpectedFormat();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helius Token Minter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .api-key-input {
+            position: relative;
+        }
+
+        .api-key-input button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f1f1f1;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #2d1b69;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        pre {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .copy-btn {
+            background: #2d1b69;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Helius Token Minter</h1>
+            <p>Create Solana tokens with the Helius API</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>Token Creation Form</h2>
+                <div class="form-group api-key-input">
+                    <label for="heliusApiKey">Helius API Key</label>
+                    <input type="password" id="heliusApiKey" placeholder="Enter your Helius API key">
+                    <button type="button" onclick="toggleApiKeyVisibility()">Show</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="tokenName">Token Name *</label>
+                    <input type="text" id="tokenName" required placeholder="e.g., My Awesome Token">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tokenSymbol">Token Symbol *</label>
+                        <input type="text" id="tokenSymbol" required placeholder="e.g., MAT" maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="decimals">Decimals</label>
+                        <input type="number" id="decimals" value="9" min="0" max="9">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" rows="3" placeholder="Describe your token's purpose and features..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tokenLogoURL">Token Logo URL (optional)</label>
+                        <input type="url" id="tokenLogoURL" placeholder="https://example.com/image.png">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="initialSupply">Initial Supply</label>
+                        <input type="number" id="initialSupply" value="1000000" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionFee">Transaction Fee (%)</label>
+                        <input type="number" id="transactionFee" value="0" min="0" max="10" step="0.1">
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Authority Settings (Optional)</h3>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="revokeMint">
+                    <label for="revokeMint">Revoke Mint Authority (Prevents creating more tokens)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="revokeFreeze">
+                    <label for="revokeFreeze">Revoke Freeze Authority (Prevents freezing accounts)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="revokeUpdate">
+                    <label for="revokeUpdate">Revoke Update Authority (Prevents metadata changes)</label>
+                </div>
+
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Social Links (Optional)</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="websiteURL">Website URL</label>
+                        <input type="url" id="websiteURL" placeholder="https://yourproject.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="twitterURL">X (Twitter) URL</label>
+                        <input type="url" id="twitterURL" placeholder="https://x.com/yourproject">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telegramURL">Telegram URL</label>
+                        <input type="url" id="telegramURL" placeholder="https://t.me/yourproject">
+                    </div>
+                    <div class="form-group">
+                        <label for="discordURL">Discord URL</label>
+                        <input type="url" id="discordURL" placeholder="https://discord.gg/yourproject">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="createToken()">Create Token</button>
+                    <button class="btn" style="background: #f1f1f1; color: #333;" onclick="resetForm()">Reset Form</button>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="result">
+                <h3>Token Created Successfully!</h3>
+                <div id="resultContent"></div>
+                <button class="copy-btn" onclick="copyToClipboard('resultContent')">Copy Results</button>
+            </div>
+
+            <div id="errorContainer" class="error">
+                <h3>Error</h3>
+                <div id="errorContent"></div>
+            </div>
+
+            <div class="section">
+                <h2>API Request Format</h2>
+                <p>This is the format of the API request that will be sent to the Helius API:</p>
+                <pre id="requestPreview">
+{
+  "name": "My Token",
+  "symbol": "TKN",
+  "description": "Token description",
+  "initialSupply": 1000000,
+  "decimals": 9,
+  "transactionFee": 0,
+  "authorities": {
+    "mintAuthority": true,
+    "freezeAuthority": true,
+    "updateAuthority": true
+  },
+  "metadata": {
+    "website": "",
+    "twitter": "",
+    "telegram": "",
+    "discord": ""
+  }
+}</pre>
+                <button class="copy-btn" onclick="copyToClipboard('requestPreview')">Copy Request</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle API key visibility
+        function toggleApiKeyVisibility() {
+            const apiKeyInput = document.getElementById('heliusApiKey');
+            const toggleButton = document.querySelector('.api-key-input button');
+            
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                toggleButton.textContent = 'Hide';
+            } else {
+                apiKeyInput.type = 'password';
+                toggleButton.textContent = 'Show';
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const button = document.querySelector(`#${elementId} + .copy-btn`);
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('tokenName').value = '';
+            document.getElementById('tokenSymbol').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('tokenLogoURL').value = '';
+            document.getElementById('initialSupply').value = '1000000';
+            document.getElementById('decimals').value = '9';
+            document.getElementById('transactionFee').value = '0';
+            document.getElementById('revokeMint').checked = false;
+            document.getElementById('revokeFreeze').checked = false;
+            document.getElementById('revokeUpdate').checked = false;
+            document.getElementById('websiteURL').value = '';
+            document.getElementById('twitterURL').value = '';
+            document.getElementById('telegramURL').value = '';
+            document.getElementById('discordURL').value = '';
+            
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('errorContainer').style.display = 'none';
+            
+            updateRequestPreview();
+        }
+
+        // Update request preview
+        function updateRequestPreview() {
+            const tokenName = document.getElementById('tokenName').value || 'My Token';
+            const tokenSymbol = document.getElementById('tokenSymbol').value || 'TKN';
+            const description = document.getElementById('description').value || 'Token description';
+            const initialSupply = document.getElementById('initialSupply').value || 1000000;
+            const decimals = document.getElementById('decimals').value || 9;
+            const transactionFee = document.getElementById('transactionFee').value || 0;
+            const revokeMint = document.getElementById('revokeMint').checked;
+            const revokeFreeze = document.getElementById('revokeFreeze').checked;
+            const revokeUpdate = document.getElementById('revokeUpdate').checked;
+            const websiteURL = document.getElementById('websiteURL').value || '';
+            const twitterURL = document.getElementById('twitterURL').value || '';
+            const telegramURL = document.getElementById('telegramURL').value || '';
+            const discordURL = document.getElementById('discordURL').value || '';
+            
+            const requestData = {
+                name: tokenName,
+                symbol: tokenSymbol,
+                description: description,
+                initialSupply: parseInt(initialSupply),
+                decimals: parseInt(decimals),
+                transactionFee: parseFloat(transactionFee),
+                authorities: {
+                    mintAuthority: !revokeMint,
+                    freezeAuthority: !revokeFreeze,
+                    updateAuthority: !revokeUpdate
+                },
+                metadata: {
+                    website: websiteURL,
+                    twitter: twitterURL,
+                    telegram: telegramURL,
+                    discord: discordURL
+                }
+            };
+            
+            document.getElementById('requestPreview').textContent = JSON.stringify(requestData, null, 2);
+        }
+
+        // Create token
+        async function createToken() {
+            // Get form data
+            const apiKey = document.getElementById('heliusApiKey').value;
+            const tokenName = document.getElementById('tokenName').value;
+            const tokenSymbol = document.getElementById('tokenSymbol').value;
+            const description = document.getElementById('description').value || '';
+            const tokenLogoURL = document.getElementById('tokenLogoURL').value || '';
+            const initialSupply = document.getElementById('initialSupply').value || 1000000;
+            const decimals = document.getElementById('decimals').value || 9;
+            const transactionFee = document.getElementById('transactionFee').value || 0;
+            const revokeMint = document.getElementById('revokeMint').checked;
+            const revokeFreeze = document.getElementById('revokeFreeze').checked;
+            const revokeUpdate = document.getElementById('revokeUpdate').checked;
+            const websiteURL = document.getElementById('websiteURL').value || '';
+            const twitterURL = document.getElementById('twitterURL').value || '';
+            const telegramURL = document.getElementById('telegramURL').value || '';
+            const discordURL = document.getElementById('discordURL').value || '';
+            
+            // Validate required fields
+            if (!apiKey) {
+                showError('Helius API Key is required');
+                return;
+            }
+            
+            if (!tokenName) {
+                showError('Token Name is required');
+                return;
+            }
+            
+            if (!tokenSymbol) {
+                showError('Token Symbol is required');
+                return;
+            }
+            
+            try {
+                // Prepare request payload
+                const requestData = {
+                    name: tokenName,
+                    symbol: tokenSymbol,
+                    description: description,
+                    initialSupply: parseInt(initialSupply),
+                    decimals: parseInt(decimals),
+                    transactionFee: parseFloat(transactionFee),
+                    authorities: {
+                        mintAuthority: !revokeMint,
+                        freezeAuthority: !revokeFreeze,
+                        updateAuthority: !revokeUpdate
+                    }
+                };
+                
+                // Add token logo URL if provided
+                if (tokenLogoURL) {
+                    requestData.imageUrl = tokenLogoURL;
+                }
+                
+                // Add social links if any are provided
+                if (websiteURL || twitterURL || telegramURL || discordURL) {
+                    requestData.metadata = {
+                        website: websiteURL,
+                        twitter: twitterURL,
+                        telegram: telegramURL,
+                        discord: discordURL
+                    };
+                }
+                
+                // Send API request
+                const response = await fetch('https://api.helius.xyz/v0/token/mint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                // Parse response
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to create token');
+                }
+                
+                // Show success
+                showResult(result);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Show error
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            const errorContent = document.getElementById('errorContent');
+            
+            errorContent.textContent = message;
+            errorContainer.style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+            
+            // Scroll to error
+            errorContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show result
+        function showResult(result) {
+            const resultContainer = document.getElementById('resultContainer');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = `
+                <p><strong>Token Mint Address:</strong> ${result.mintAddress}</p>
+                <p><strong>Transaction Signature:</strong> ${result.signature}</p>
+                <p><strong>Success:</strong> ${result.success ? 'Yes' : 'No'}</p>
+            `;
+            
+            if (result.metadataAddress) {
+                resultContent.innerHTML += `<p><strong>Metadata Address:</strong> ${result.metadataAddress}</p>`;
+            }
+            
+            resultContainer.style.display = 'block';
+            document.getElementById('errorContainer').style.display = 'none';
+            
+            // Scroll to result
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up form change listeners
+            const formInputs = document.querySelectorAll('input, textarea, select');
+            formInputs.forEach(input => {
+                input.addEventListener('input', updateRequestPreview);
+                input.addEventListener('change', updateRequestPreview);
+            });
+            
+            // Initial update
+            updateRequestPreview();
+        });
+    </script>
+</body>
+</html>

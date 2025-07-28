@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Fee Validation Test</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+        }
+        
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Transaction Fee Validation Test</h1>
+        <p>Testing transaction fee input validation to ensure numeric values are properly handled</p>
+        
+        <!-- Test Case 1: Manual Token Creation with Dropdown -->
+        <div class="test-section">
+            <h2>Test 1: Manual Token Creation (Dropdown)</h2>
+            <p>Tests the dropdown selector that mimics the main application</p>
+            
+            <div class="form-group">
+                <label>Token Name</label>
+                <input type="text" id="test1-name" value="TestToken" placeholder="Your Token Name">
+            </div>
+            
+            <div class="form-group">
+                <label>Token Symbol</label>
+                <input type="text" id="test1-symbol" value="TEST" placeholder="Your Token Symbol">
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="test1-description" value="Test token for validation" placeholder="Your Description">
+            </div>
+            
+            <div class="form-group">
+                <label>Total Supply</label>
+                <input type="number" id="test1-supply" value="1000000000" placeholder="Your Total Supply">
+            </div>
+            
+            <div class="form-group">
+                <label>Decimals</label>
+                <input type="number" id="test1-decimals" value="9" placeholder="Your Decimals">
+            </div>
+            
+            <div class="form-group">
+                <label>Transaction Fee (%) - Dropdown Format</label>
+                <select id="test1-fee">
+                    <option value="0">0%</option>
+                    <option value="0.1">0.1%</option>
+                    <option value="0.2">0.2%</option>
+                    <option value="0.3">0.3%</option>
+                    <option value="0.4">0.4%</option>
+                    <option value="0.5">0.5%</option>
+                    <option value="1.0" selected>1.0%</option>
+                    <option value="1.5">1.5%</option>
+                    <option value="2.0">2.0%</option>
+                    <option value="2.5">2.5%</option>
+                    <option value="3.0">3.0%</option>
+                    <option value="3.5">3.5%</option>
+                    <option value="4.0">4.0%</option>
+                    <option value="4.5">4.5%</option>
+                    <option value="5.0">5.0%</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="testDropdownValidation()">Test Dropdown Validation</button>
+            <div id="test1-result" class="result" style="display: none;"></div>
+        </div>
+        
+        <!-- Test Case 2: Direct Numeric Input -->
+        <div class="test-section">
+            <h2>Test 2: Direct Numeric Input</h2>
+            <p>Tests direct numeric input without % symbol</p>
+            
+            <div class="form-group">
+                <label>Token Name</label>
+                <input type="text" id="test2-name" value="NumericToken" placeholder="Your Token Name">
+            </div>
+            
+            <div class="form-group">
+                <label>Token Symbol</label>
+                <input type="text" id="test2-symbol" value="NUM" placeholder="Your Token Symbol">
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="test2-description" value="Numeric input test token" placeholder="Your Description">
+            </div>
+            
+            <div class="form-group">
+                <label>Total Supply</label>
+                <input type="number" id="test2-supply" value="1000000000" placeholder="Your Total Supply">
+            </div>
+            
+            <div class="form-group">
+                <label>Decimals</label>
+                <input type="number" id="test2-decimals" value="9" placeholder="Your Decimals">
+            </div>
+            
+            <div class="form-group">
+                <label>Transaction Fee (Numeric Only - No % Symbol)</label>
+                <input type="number" id="test2-fee" value="1" min="0" max="5" step="0.1" placeholder="1">
+                <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">
+                    Enter numeric value only (e.g., "1" for 1%). Do NOT include "%" symbol.
+                </small>
+            </div>
+            
+            <button class="btn" onclick="testNumericValidation()">Test Numeric Validation</button>
+            <div id="test2-result" class="result" style="display: none;"></div>
+        </div>
+        
+        <!-- Test Case 3: Edge Cases -->
+        <div class="test-section">
+            <h2>Test 3: Edge Cases & Validation</h2>
+            <p>Tests various edge cases and validation scenarios</p>
+            
+            <div class="test-case">
+                <h4>Test Case 3.1: Value "1" (should represent 1%)</h4>
+                <button class="btn" onclick="testEdgeCase('1', '1%')">Test "1" = 1%</button>
+                <div id="edge1-result" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="test-case">
+                <h4>Test Case 3.2: Value "0.5" (should represent 0.5%)</h4>
+                <button class="btn" onclick="testEdgeCase('0.5', '0.5%')">Test "0.5" = 0.5%</button>
+                <div id="edge2-result" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="test-case">
+                <h4>Test Case 3.3: Value "1%" (should be rejected or cleaned)</h4>
+                <button class="btn" onclick="testEdgeCase('1%', 'Invalid - contains %')">Test "1%" (Invalid)</button>
+                <div id="edge3-result" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="test-case">
+                <h4>Test Case 3.4: Value "0.01" (should represent 0.01% or be corrected)</h4>
+                <button class="btn" onclick="testEdgeCase('0.01', '0.01%')">Test "0.01" = 0.01%</button>
+                <div id="edge4-result" class="result" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <!-- Backend Simulation Test -->
+        <div class="test-section">
+            <h2>Test 4: Backend Processing Simulation</h2>
+            <p>Simulates how the backend would process transaction fee values</p>
+            
+            <button class="btn" onclick="testBackendSimulation()">Test Backend Processing</button>
+            <div id="backend-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Dropdown Validation
+        function testDropdownValidation() {
+            const result = document.getElementById('test1-result');
+            const feeValue = document.getElementById('test1-fee').value;
+            
+            const tokenData = {
+                name: document.getElementById('test1-name').value,
+                symbol: document.getElementById('test1-symbol').value,
+                description: document.getElementById('test1-description').value,
+                supply: parseInt(document.getElementById('test1-supply').value),
+                decimals: parseInt(document.getElementById('test1-decimals').value),
+                transactionFee: parseFloat(feeValue)
+            };
+            
+            result.style.display = 'block';
+            result.className = 'result success';
+            result.innerHTML = `
+                <h4>✅ Dropdown Test Results:</h4>
+                <p><strong>Selected Value:</strong> ${feeValue}</p>
+                <p><strong>Parsed as Number:</strong> ${tokenData.transactionFee}</p>
+                <p><strong>Type:</strong> ${typeof tokenData.transactionFee}</p>
+                <p><strong>Is Valid Number:</strong> ${!isNaN(tokenData.transactionFee)}</p>
+                <p><strong>Token Data:</strong></p>
+                <pre>${JSON.stringify(tokenData, null, 2)}</pre>
+            `;
+        }
+        
+        // Test 2: Numeric Input Validation
+        function testNumericValidation() {
+            const result = document.getElementById('test2-result');
+            const feeInput = document.getElementById('test2-fee');
+            const feeValue = feeInput.value;
+            
+            // Validate numeric input (no % symbol)
+            const isValidFormat = !/[%]/.test(feeValue);
+            const numericValue = parseFloat(feeValue);
+            const isValidRange = !isNaN(numericValue) && numericValue >= 0 && numericValue <= 5;
+            
+            const tokenData = {
+                name: document.getElementById('test2-name').value,
+                symbol: document.getElementById('test2-symbol').value,
+                description: document.getElementById('test2-description').value,
+                supply: parseInt(document.getElementById('test2-supply').value),
+                decimals: parseInt(document.getElementById('test2-decimals').value),
+                transactionFee: numericValue
+            };
+            
+            result.style.display = 'block';
+            result.className = isValidFormat && isValidRange ? 'result success' : 'result error';
+            result.innerHTML = `
+                <h4>${isValidFormat && isValidRange ? '✅' : '❌'} Numeric Input Test Results:</h4>
+                <p><strong>Input Value:</strong> "${feeValue}"</p>
+                <p><strong>Contains % Symbol:</strong> ${/[%]/.test(feeValue) ? 'Yes (Invalid)' : 'No (Valid)'}</p>
+                <p><strong>Parsed as Number:</strong> ${numericValue}</p>
+                <p><strong>Type:</strong> ${typeof numericValue}</p>
+                <p><strong>Is Valid Number:</strong> ${!isNaN(numericValue)}</p>
+                <p><strong>In Valid Range (0-5):</strong> ${isValidRange}</p>
+                <p><strong>Final Validation:</strong> ${isValidFormat && isValidRange ? 'PASS' : 'FAIL'}</p>
+                <p><strong>Token Data:</strong></p>
+                <pre>${JSON.stringify(tokenData, null, 2)}</pre>
+            `;
+        }
+        
+        // Test 3: Edge Cases
+        function testEdgeCase(inputValue, expectedResult) {
+            const resultId = `edge${inputValue === '1' ? '1' : inputValue === '0.5' ? '2' : inputValue === '1%' ? '3' : '4'}-result`;
+            const result = document.getElementById(resultId);
+            
+            // Test validation logic
+            const containsPercent = /[%]/.test(inputValue);
+            const cleanValue = inputValue.replace('%', '');
+            const numericValue = parseFloat(cleanValue);
+            const isValidNumber = !isNaN(numericValue);
+            const isValidRange = isValidNumber && numericValue >= 0 && numericValue <= 5;
+            
+            let status = 'UNKNOWN';
+            let reasoning = '';
+            
+            if (containsPercent) {
+                status = 'INVALID';
+                reasoning = 'Contains % symbol - should be rejected or cleaned';
+            } else if (isValidNumber && isValidRange) {
+                status = 'VALID';
+                reasoning = `Represents ${numericValue}% transaction fee`;
+            } else if (!isValidNumber) {
+                status = 'INVALID';
+                reasoning = 'Not a valid number';
+            } else {
+                status = 'INVALID';
+                reasoning = 'Outside valid range (0-5)';
+            }
+            
+            result.style.display = 'block';
+            result.className = status === 'VALID' ? 'result success' : 'result error';
+            result.innerHTML = `
+                <h4>${status === 'VALID' ? '✅' : '❌'} Edge Case Test:</h4>
+                <p><strong>Input:</strong> "${inputValue}"</p>
+                <p><strong>Expected:</strong> ${expectedResult}</p>
+                <p><strong>Contains %:</strong> ${containsPercent}</p>
+                <p><strong>Clean Value:</strong> "${cleanValue}"</p>
+                <p><strong>Numeric Value:</strong> ${numericValue}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Reasoning:</strong> ${reasoning}</p>
+            `;
+        }
+        
+        // Test 4: Backend Simulation
+        function testBackendSimulation() {
+            const result = document.getElementById('backend-result');
+            
+            const testCases = [
+                { input: '1', expected: 1.0, description: 'Standard 1% fee' },
+                { input: '0.5', expected: 0.5, description: 'Half percent fee' },
+                { input: '0', expected: 0.0, description: 'No fee' },
+                { input: '5', expected: 5.0, description: 'Maximum fee' },
+                { input: '1%', expected: 'ERROR', description: 'Invalid - contains %' },
+                { input: '0.01', expected: 0.01, description: 'Very small fee' }
+            ];
+            
+            let html = '<h4>🔄 Backend Processing Simulation:</h4>';
+            
+            testCases.forEach((testCase, index) => {
+                const { input, expected, description } = testCase;
+                
+                // Simulate backend validation
+                let processedValue, status, message;
+                
+                if (typeof input === 'string' && input.includes('%')) {
+                    status = 'ERROR';
+                    message = 'Backend rejected: Contains % symbol';
+                    processedValue = null;
+                } else {
+                    const numValue = parseFloat(input);
+                    if (isNaN(numValue)) {
+                        status = 'ERROR';
+                        message = 'Backend rejected: Not a number';
+                        processedValue = null;
+                    } else if (numValue < 0 || numValue > 5) {
+                        status = 'ERROR';
+                        message = 'Backend rejected: Outside valid range (0-5)';
+                        processedValue = null;
+                    } else {
+                        status = 'SUCCESS';
+                        message = `Backend accepted: ${numValue}% transaction fee`;
+                        processedValue = numValue;
+                    }
+                }
+                
+                const isExpectedResult = (expected === 'ERROR' && status === 'ERROR') || 
+                                       (expected !== 'ERROR' && processedValue === expected);
+                
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                        <p><strong>Test ${index + 1}:</strong> ${description}</p>
+                        <p><strong>Input:</strong> "${input}"</p>
+                        <p><strong>Expected:</strong> ${expected}</p>
+                        <p><strong>Backend Result:</strong> ${status}</p>
+                        <p><strong>Processed Value:</strong> ${processedValue}</p>
+                        <p><strong>Message:</strong> ${message}</p>
+                        <p><strong>Match Expected:</strong> ${isExpectedResult ? '✅ YES' : '❌ NO'}</p>
+                    </div>
+                `;
+            });
+            
+            result.style.display = 'block';
+            result.className = 'result success';
+            result.innerHTML = html;
+        }
+        
+        // Initialize default values
+        window.onload = function() {
+            document.getElementById('test1-fee').value = '1.0';
+            document.getElementById('test2-fee').value = '1';
+        };
+    </script>
+</body>
+</html>

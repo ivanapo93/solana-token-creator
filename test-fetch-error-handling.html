@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Fetch Error Handling and Retry Logic</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+    .test-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .test-buttons {
+      margin: 15px 0;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button.fail {
+      background-color: #f44336;
+    }
+    button.fail:hover {
+      background-color: #d32f2f;
+    }
+    button.warn {
+      background-color: #ff9800;
+    }
+    button.warn:hover {
+      background-color: #fb8c00;
+    }
+    #results {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success {
+      color: #4CAF50;
+    }
+    .error {
+      color: #f44336;
+    }
+    .warning {
+      color: #ff9800;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .endpoint-selector {
+      margin-bottom: 15px;
+    }
+    select {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fetch Error Handling and Retry Test Suite</h1>
+  
+  <div class="test-section">
+    <div class="test-title">1. Basic Fetch Error Tests</div>
+    <p>These tests verify the basic error handling capabilities of the fetchWithRetry function.</p>
+    <div class="test-buttons">
+      <button onclick="testSuccessfulFetch()">Test Successful Fetch</button>
+      <button class="fail" onclick="testNetworkError()">Test Network Error</button>
+      <button class="fail" onclick="testTimeoutError()">Test Timeout Error</button>
+      <button class="warn" onclick="test404Error()">Test 404 Not Found</button>
+      <button class="warn" onclick="test500Error()">Test 500 Server Error</button>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <div class="test-title">2. Retry Logic Tests</div>
+    <p>These tests verify that the retry mechanism works correctly with different configurations.</p>
+    <div class="test-buttons">
+      <button onclick="testRetrySuccess()">Test Retry Then Success</button>
+      <button class="fail" onclick="testMaxRetries()">Test Max Retries Exhausted</button>
+      <button class="warn" onclick="testRetryWithExponentialBackoff()">Test Exponential Backoff</button>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <div class="test-title">3. CORS and Authentication Tests</div>
+    <p>These tests verify error handling for CORS and authentication issues.</p>
+    <div class="test-buttons">
+      <button class="fail" onclick="testCORSError()">Test CORS Error</button>
+      <button class="warn" onclick="testAuthenticationError()">Test Auth Error (401)</button>
+      <button class="warn" onclick="testForbiddenError()">Test Forbidden Error (403)</button>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <div class="test-title">4. API Endpoint Connectivity Tests</div>
+    <div class="endpoint-selector">
+      <select id="endpointSelect">
+        <option value="/api/health">Health Check Endpoint</option>
+        <option value="/api/auth/challenge">Auth Challenge Endpoint</option>
+        <option value="/api/tokens/create">Token Creation Endpoint</option>
+        <option value="https://api.pinata.cloud/pinning/pinJSONToIPFS">Pinata IPFS Endpoint</option>
+        <option value="https://api.helius.xyz/v0/token/mint">Helius Token Endpoint</option>
+        <option value="custom">Custom Endpoint URL</option>
+      </select>
+      <input type="text" id="customEndpoint" placeholder="Enter custom endpoint URL" style="display: none; width: 300px; padding: 8px; margin-left: 10px;">
+    </div>
+    <div class="test-buttons">
+      <button onclick="testEndpointConnectivity()">Test Endpoint Connectivity</button>
+      <button onclick="testEndpointWithRetry()">Test Endpoint with Retry</button>
+      <button class="warn" onclick="diagnoseConnectivityIssues()">Diagnose Connectivity Issues</button>
+    </div>
+  </div>
+  
+  <h2>Test Results</h2>
+  <div id="results"></div>
+  
+  <script src="./error-monitoring.js"></script>
+  <script src="./api-connectivity.js"></script>
+  
+  <script>
+    // Show/hide custom endpoint input based on selection
+    document.getElementById('endpointSelect').addEventListener('change', function() {
+      const customInput = document.getElementById('customEndpoint');
+      if (this.value === 'custom') {
+        customInput.style.display = 'inline-block';
+      } else {
+        customInput.style.display = 'none';
+      }
+    });
+    
+    // Helper to write to the results div
+    function writeResult(message, type = 'info') {
+      const resultsDiv = document.getElementById('results');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      resultsDiv.innerHTML += `<div class="${type}"><strong>[${timestamp}]</strong>: ${message}</div>`;
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+    }
+    
+    // Helper to write error details
+    function writeErrorDetails(error) {
+      let details = '';
+      
+      if (error.message) {
+        details += `<strong>Message:</strong> ${error.message}<br>`;
+      }
+      
+      if (error.name) {
+        details += `<strong>Type:</strong> ${error.name}<br>`;
+      }
+      
+      if (error.status) {
+        details += `<strong>Status:</strong> ${error.status}<br>`;
+      }
+      
+      if (error.stack) {
+        details += `<strong>Stack:</strong> <pre>${error.stack}</pre>`;
+      }
+      
+      writeResult(details, 'error');
+    }
+    
+    // 1. Basic Fetch Error Tests
+    
+    async function testSuccessfulFetch() {
+      writeResult('Testing successful fetch...', 'info');
+      
+      try {
+        // Use the JSONPlaceholder API for testing
+        const response = await fetchWithRetry('https://jsonplaceholder.typicode.com/todos/1');
+        const data = await response.json();
+        
+        writeResult(`Fetch successful! Received: ${JSON.stringify(data)}`, 'success');
+      } catch (error) {
+        writeResult('Fetch should have succeeded but failed', 'error');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function testNetworkError() {
+      writeResult('Testing network error handling...', 'info');
+      
+      try {
+        // Use a non-existent domain to trigger a network error
+        await fetchWithRetry('https://this-domain-does-not-exist-123456789.com/api', {}, 1);
+        
+        writeResult('Test failed: Expected a network error but request succeeded', 'error');
+      } catch (error) {
+        writeResult('Network error correctly caught!', 'success');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function testTimeoutError() {
+      writeResult('Testing timeout error handling...', 'info');
+      
+      try {
+        // Use a slow API with a very short timeout
+        await fetchWithRetry('https://httpbin.org/delay/5', {}, 1, 1000, 500);
+        
+        writeResult('Test failed: Expected a timeout error but request succeeded', 'error');
+      } catch (error) {
+        writeResult('Timeout error correctly caught!', 'success');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function test404Error() {
+      writeResult('Testing 404 error handling...', 'info');
+      
+      try {
+        // Use an endpoint that returns 404
+        await fetchWithRetry('https://jsonplaceholder.typicode.com/nonexistent', {}, 1);
+        
+        writeResult('Test failed: Expected a 404 error to be handled', 'error');
+      } catch (error) {
+        writeResult('404 error correctly handled!', 'success');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function test500Error() {
+      writeResult('Testing 500 error handling...', 'info');
+      
+      try {
+        // Use an endpoint that returns 500
+        await fetchWithRetry('https://httpbin.org/status/500', {}, 1);
+        
+        writeResult('Test failed: Expected a 500 error to be handled', 'error');
+      } catch (error) {
+        writeResult('500 error correctly handled!', 'success');
+        writeErrorDetails(error);
+      }
+    }
+    
+    // 2. Retry Logic Tests
+    
+    async function testRetrySuccess() {
+      writeResult('Testing retry then success...', 'info');
+      
+      // Create a mock fetch that fails on first attempt but succeeds on second
+      const originalFetch = window.fetch;
+      let attempts = 0;
+      
+      window.fetch = async function(url, options) {
+        attempts++;
+        if (attempts === 1) {
+          writeResult('First attempt failed as expected, retrying...', 'warning');
+          return Promise.reject(new Error('Simulated first attempt failure'));
+        } else {
+          writeResult(`Attempt #${attempts} succeeded`, 'success');
+          return originalFetch('https://jsonplaceholder.typicode.com/todos/1', options);
+        }
+      };
+      
+      try {
+        const response = await fetchWithRetry('https://example.com/api', {}, 3, 500);
+        const data = await response.json();
+        
+        writeResult(`Retry successful! Data received after ${attempts} attempts: ${JSON.stringify(data)}`, 'success');
+      } catch (error) {
+        writeResult('Test failed: Retry should have succeeded', 'error');
+        writeErrorDetails(error);
+      } finally {
+        // Restore original fetch
+        window.fetch = originalFetch;
+      }
+    }
+    
+    async function testMaxRetries() {
+      writeResult('Testing max retries exhausted...', 'info');
+      
+      // Create a mock fetch that always fails
+      const originalFetch = window.fetch;
+      let attempts = 0;
+      
+      window.fetch = async function(url, options) {
+        attempts++;
+        writeResult(`Attempt #${attempts} failing as expected...`, 'warning');
+        return Promise.reject(new Error(`Simulated failure for attempt #${attempts}`));
+      };
+      
+      try {
+        await fetchWithRetry('https://example.com/api', {}, 3, 100);
+        
+        writeResult('Test failed: Should have exhausted all retries and thrown an error', 'error');
+      } catch (error) {
+        writeResult(`Max retries correctly exhausted! Made ${attempts} attempts before giving up.`, 'success');
+        writeErrorDetails(error);
+      } finally {
+        // Restore original fetch
+        window.fetch = originalFetch;
+      }
+    }
+    
+    async function testRetryWithExponentialBackoff() {
+      writeResult('Testing exponential backoff...', 'info');
+      
+      // Create a mock fetch that always fails
+      const originalFetch = window.fetch;
+      let attempts = 0;
+      const attemptTimes = [];
+      
+      window.fetch = async function(url, options) {
+        attempts++;
+        attemptTimes.push(Date.now());
+        writeResult(`Attempt #${attempts} at ${new Date().toLocaleTimeString()}...`, 'warning');
+        return Promise.reject(new Error(`Simulated failure for attempt #${attempts}`));
+      };
+      
+      try {
+        await fetchWithRetry('https://example.com/api', {}, 3, 100, 5000);
+        
+        writeResult('Test failed: Should have exhausted all retries', 'error');
+      } catch (error) {
+        // Calculate delays between attempts
+        const delays = [];
+        for (let i = 1; i < attemptTimes.length; i++) {
+          delays.push(attemptTimes[i] - attemptTimes[i-1]);
+        }
+        
+        writeResult(`Exponential backoff verified! Delays between attempts: ${delays.join('ms, ')}ms`, 'success');
+        writeErrorDetails(error);
+      } finally {
+        // Restore original fetch
+        window.fetch = originalFetch;
+      }
+    }
+    
+    // 3. CORS and Authentication Tests
+    
+    async function testCORSError() {
+      writeResult('Testing CORS error handling...', 'info');
+      
+      try {
+        // Attempt to access an API that doesn't have CORS enabled from this origin
+        await fetchWithRetry('https://api.github.com/users', {
+          method: 'POST', // This will trigger a CORS preflight which will fail
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ test: true })
+        }, 1);
+        
+        writeResult('Test failed: Expected a CORS error but request succeeded', 'error');
+      } catch (error) {
+        writeResult('CORS error correctly caught!', 'success');
+        writeErrorDetails(error);
+        
+        // Get CORS helper suggestions
+        const suggestions = getCorsHelperSuggestions('https://api.github.com/users');
+        writeResult(`CORS Helper Suggestions: ${JSON.stringify(suggestions, null, 2)}`, 'info');
+      }
+    }
+    
+    async function testAuthenticationError() {
+      writeResult('Testing authentication error handling (401)...', 'info');
+      
+      try {
+        // Use an endpoint that requires authentication
+        await fetchWithRetry('https://api.github.com/user/repos', {}, 1);
+        
+        writeResult('Test failed: Expected a 401 error but request succeeded', 'error');
+      } catch (error) {
+        writeResult('Authentication error (401) correctly caught!', 'success');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function testForbiddenError() {
+      writeResult('Testing forbidden error handling (403)...', 'info');
+      
+      try {
+        // Use an endpoint that will return 403
+        await fetchWithRetry('https://httpbin.org/status/403', {}, 1);
+        
+        writeResult('Test failed: Expected a 403 error but request succeeded', 'error');
+      } catch (error) {
+        writeResult('Forbidden error (403) correctly caught!', 'success');
+        writeErrorDetails(error);
+      }
+    }
+    
+    // 4. API Endpoint Connectivity Tests
+    
+    function getSelectedEndpoint() {
+      const selectElement = document.getElementById('endpointSelect');
+      const customInput = document.getElementById('customEndpoint');
+      
+      if (selectElement.value === 'custom') {
+        return customInput.value;
+      } else {
+        return selectElement.value;
+      }
+    }
+    
+    async function testEndpointConnectivity() {
+      const endpoint = getSelectedEndpoint();
+      
+      if (!endpoint) {
+        writeResult('Please select or enter an endpoint', 'error');
+        return;
+      }
+      
+      writeResult(`Testing connectivity to endpoint: ${endpoint}...`, 'info');
+      
+      try {
+        const url = endpoint.startsWith('http') ? endpoint : buildApiUrl(endpoint);
+        const isReachable = await isUrlReachable(url);
+        
+        if (isReachable) {
+          writeResult(`Endpoint is reachable: ${url}`, 'success');
+        } else {
+          writeResult(`Endpoint is not reachable: ${url}`, 'error');
+        }
+      } catch (error) {
+        writeResult('Error testing endpoint connectivity', 'error');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function testEndpointWithRetry() {
+      const endpoint = getSelectedEndpoint();
+      
+      if (!endpoint) {
+        writeResult('Please select or enter an endpoint', 'error');
+        return;
+      }
+      
+      writeResult(`Testing endpoint with retry: ${endpoint}...`, 'info');
+      
+      try {
+        const url = endpoint.startsWith('http') ? endpoint : buildApiUrl(endpoint);
+        const response = await fetchWithRetry(url, {}, 3, 1000, 5000);
+        
+        writeResult(`Endpoint responded with status: ${response.status}`, 'success');
+        
+        if (response.headers.get('content-type')?.includes('application/json')) {
+          const data = await response.json();
+          writeResult(`Response data: ${JSON.stringify(data, null, 2)}`, 'info');
+        } else {
+          const text = await response.text();
+          writeResult(`Response text: ${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`, 'info');
+        }
+      } catch (error) {
+        writeResult('Error with endpoint retry test', 'error');
+        writeErrorDetails(error);
+      }
+    }
+    
+    async function diagnoseConnectivityIssues() {
+      writeResult('Running comprehensive connectivity diagnostics...', 'info');
+      
+      try {
+        // Get selected endpoint and add to the list of endpoints to check
+        const selectedEndpoint = getSelectedEndpoint();
+        let endpoints = [
+          '/api/health',
+          '/api/auth/challenge',
+          '/api/tokens/create',
+          'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+          'https://api.helius.xyz/v0/token/mint'
+        ];
+        
+        // Add the selected endpoint if not already in the list and valid
+        if (selectedEndpoint && !endpoints.includes(selectedEndpoint)) {
+          endpoints.push(selectedEndpoint);
+        }
+        
+        // Convert relative endpoints to full URLs
+        endpoints = endpoints.map(endpoint => 
+          endpoint.startsWith('http') ? endpoint : buildApiUrl(endpoint)
+        );
+        
+        const diagnostics = await diagnoseConnectivity(endpoints);
+        
+        writeResult(`Connectivity Diagnostics Results: ${JSON.stringify(diagnostics, null, 2)}`, 'info');
+        
+        if (diagnostics.corsIssuesDetected) {
+          writeResult('⚠️ CORS issues detected. Check CORS configuration on the server.', 'warning');
+        }
+        
+        if (diagnostics.networkIssuesDetected) {
+          writeResult('⚠️ Network connectivity issues detected.', 'warning');
+        }
+        
+        // Display endpoint-specific results
+        for (const [url, health] of Object.entries(diagnostics.endpointChecks)) {
+          if (health.reachable) {
+            writeResult(`✅ Endpoint reachable: ${url} (${health.responseTime}ms)`, 'success');
+          } else {
+            writeResult(`❌ Endpoint unreachable: ${url} - ${health.error}`, 'error');
+          }
+        }
+      } catch (error) {
+        writeResult('Error running diagnostics', 'error');
+        writeErrorDetails(error);
+      }
+    }
+  </script>
+</body>
+</html>

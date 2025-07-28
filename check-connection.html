@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { 
+            background-color: #6c757d; 
+            cursor: not-allowed; 
+        }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .test-result {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .test-details {
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .troubleshooting {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .troubleshooting ul {
+            padding-left: 20px;
+        }
+        h1 {
+            color: #343a40;
+        }
+        h2 {
+            color: #495057;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Connection Diagnostic Tool</h1>
+        <p>Use this tool to diagnose connectivity issues with our backend services.</p>
+        
+        <div class="status-section">
+            <h2>1. Health Check</h2>
+            <p>Tests connectivity to the Supabase backend and Solana RPC endpoints.</p>
+            <button id="checkHealth" onclick="checkHealthEndpoint()">Run Health Check</button>
+            <div id="healthStatus" class="status info">Ready to test</div>
+            <div id="healthResult" style="display: none;"></div>
+        </div>
+        
+        <div class="status-section">
+            <h2>2. API Connectivity</h2>
+            <p>Tests connectivity to our API services.</p>
+            <button id="checkAPI" onclick="checkAPIConnectivity()">Test API Connectivity</button>
+            <div id="apiStatus" class="status info">Ready to test</div>
+            <div id="apiResult" style="display: none;"></div>
+        </div>
+        
+        <div class="status-section">
+            <h2>3. Image/IPFS Connectivity</h2>
+            <p>Tests connectivity to image hosting and IPFS services.</p>
+            <button id="checkIPFS" onclick="checkIPFSConnectivity()">Test IPFS Connectivity</button>
+            <div id="ipfsStatus" class="status info">Ready to test</div>
+            <div id="ipfsResult" style="display: none;"></div>
+        </div>
+        
+        <div class="status-section">
+            <h2>4. Network Diagnostics</h2>
+            <p>Run basic network diagnostics to identify connectivity issues.</p>
+            <button id="runDiagnostics" onclick="runNetworkDiagnostics()">Run Network Diagnostics</button>
+            <div id="networkStatus" class="status info">Ready to test</div>
+            <div id="networkResult" style="display: none;"></div>
+        </div>
+        
+        <div id="logs" class="log-area">Connection diagnostic tool initialized and ready.</div>
+        
+        <div class="troubleshooting">
+            <h2>Troubleshooting Steps</h2>
+            <ul>
+                <li>Check your internet connection</li>
+                <li>Disable VPN or proxy services if enabled</li>
+                <li>Clear browser cache and cookies</li>
+                <li>Try a different browser</li>
+                <li>Check if your firewall is blocking connections</li>
+                <li>If on a corporate network, contact your IT department</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Logging utility
+        function log(message) {
+            const timestamp = new Date().toISOString();
+            const logsElement = document.getElementById('logs');
+            logsElement.textContent += `[${timestamp}] ${message}\n`;
+            logsElement.scrollTop = logsElement.scrollHeight;
+        }
+        
+        // Update status UI
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+        
+        // Update result UI
+        function updateResult(elementId, content, show = true) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.style.display = show ? 'block' : 'none';
+        }
+        
+        // Configuration object - edit these values to customize endpoints
+        const CONFIG = {
+            healthEndpoint: 'https://api.youware.com/health',
+            apiEndpoints: [
+                { url: 'https://api.youware.com/api/ping', name: 'Ping Endpoint' },
+                { url: 'https://api.youware.com/api/status', name: 'Status Endpoint' }
+            ],
+            ipfsEndpoints: [
+                { 
+                    url: 'https://public.youware.com/users-website-assets/prod/1a7adfb7-e756-4c01-9d97-1ba0389e3d99/0dc1db1911f6457b8d3e9389a446805d.jpg', 
+                    name: 'CDN Image' 
+                },
+                { 
+                    url: 'https://ipfs.io/ipfs/QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx', 
+                    name: 'IPFS Gateway' 
+                }
+            ],
+            networkEndpoints: [
+                { url: 'https://www.google.com', name: 'Google' },
+                { url: 'https://www.cloudflare.com', name: 'Cloudflare' },
+                { url: 'https://api.youware.com', name: 'Youware API' }
+            ],
+            // Optional auth headers - uncomment and fill if needed
+            authHeaders: {
+                // 'Authorization': 'Bearer YOUR_TOKEN_HERE',
+                // 'X-API-Key': 'YOUR_API_KEY_HERE',
+            }
+        };
+        
+        // 1. Health Check
+        async function checkHealthEndpoint() {
+            log("Starting health check...");
+            updateStatus('healthStatus', 'Checking health endpoint...', 'warning');
+            
+            try {
+                // Try to fetch the health endpoint
+                const response = await fetch(CONFIG.healthEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...CONFIG.authHeaders // Add any custom auth headers
+                    },
+                    mode: 'cors',
+                    timeout: 10000 // 10 second timeout
+                });
+                
+                // Process response
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Health check successful: ${JSON.stringify(data)}`);
+                    
+                    updateStatus('healthStatus', 'Health endpoint is accessible', 'success');
+                    
+                    let resultContent = `<div class="test-result">✅ Health endpoint is accessible</div>`;
+                    resultContent += `<div class="test-details">`;
+                    resultContent += `<strong>Status:</strong> ${data.status}<br>`;
+                    resultContent += `<strong>Timestamp:</strong> ${data.timestamp}<br>`;
+                    
+                    // Display service statuses
+                    if (data.services) {
+                        resultContent += `<strong>Services:</strong><br>`;
+                        for (const [service, status] of Object.entries(data.services)) {
+                            const icon = status.status === 'ok' ? '✅' : '❌';
+                            resultContent += `- ${service}: ${icon} ${status.status}`;
+                            if (status.latency) {
+                                resultContent += ` (${status.latency}ms)`;
+                            }
+                            if (status.error) {
+                                resultContent += ` - Error: ${status.error}`;
+                            }
+                            resultContent += `<br>`;
+                        }
+                    }
+                    
+                    resultContent += `</div>`;
+                    updateResult('healthResult', resultContent);
+                    
+                } else {
+                    const errorData = await response.text();
+                    log(`Health check failed with status ${response.status}: ${errorData}`);
+                    
+                    updateStatus('healthStatus', `Health check failed: ${response.status}`, 'error');
+                    updateResult('healthResult', `
+                        <div class="test-result">❌ Health endpoint returned error</div>
+                        <div class="test-details">
+                            <strong>Status Code:</strong> ${response.status}<br>
+                            <strong>Error:</strong> ${errorData || 'No details available'}
+                        </div>
+                    `);
+                }
+                
+            } catch (error) {
+                log(`Health check failed: ${error.message}`);
+                
+                updateStatus('healthStatus', `Connection failed: ${error.message}`, 'error');
+                updateResult('healthResult', `
+                    <div class="test-result">❌ Cannot connect to health endpoint</div>
+                    <div class="test-details">
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>Possible causes:</strong> Network issues, server down, CORS restrictions
+                    </div>
+                `);
+            }
+        }
+        
+        // 2. API Connectivity
+        async function checkAPIConnectivity() {
+            log("Starting API connectivity test...");
+            updateStatus('apiStatus', 'Testing API connectivity...', 'warning');
+            
+            try {
+                // Test different API endpoints from CONFIG
+                const endpoints = CONFIG.apiEndpoints;
+                
+                let resultContent = '';
+                let allSuccessful = true;
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        log(`Testing endpoint: ${endpoint.name} (${endpoint.url})`);
+                        
+                        const startTime = Date.now();
+                        const response = await fetch(endpoint.url, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...CONFIG.authHeaders // Add any custom auth headers
+                            },
+                            mode: 'cors',
+                            timeout: 5000 // 5 second timeout
+                        });
+                        
+                        const responseTime = Date.now() - startTime;
+                        
+                        if (response.ok) {
+                            log(`${endpoint.name} test successful (${responseTime}ms)`);
+                            resultContent += `<div class="test-result">✅ ${endpoint.name}: Accessible</div>`;
+                            resultContent += `<div class="test-details">Response time: ${responseTime}ms</div>`;
+                        } else {
+                            log(`${endpoint.name} test failed with status ${response.status}`);
+                            resultContent += `<div class="test-result">❌ ${endpoint.name}: Error ${response.status}</div>`;
+                            allSuccessful = false;
+                        }
+                        
+                    } catch (error) {
+                        log(`${endpoint.name} test failed: ${error.message}`);
+                        resultContent += `<div class="test-result">❌ ${endpoint.name}: ${error.message}</div>`;
+                        allSuccessful = false;
+                    }
+                }
+                
+                if (allSuccessful) {
+                    updateStatus('apiStatus', 'API connectivity successful', 'success');
+                } else {
+                    updateStatus('apiStatus', 'API connectivity issues detected', 'error');
+                }
+                
+                updateResult('apiResult', resultContent);
+                
+            } catch (error) {
+                log(`API connectivity test failed: ${error.message}`);
+                updateStatus('apiStatus', `Test failed: ${error.message}`, 'error');
+                updateResult('apiResult', `
+                    <div class="test-result">❌ API connectivity test failed</div>
+                    <div class="test-details">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `);
+            }
+        }
+        
+        // 3. IPFS Connectivity
+        async function checkIPFSConnectivity() {
+            log("Starting IPFS connectivity test...");
+            updateStatus('ipfsStatus', 'Testing IPFS connectivity...', 'warning');
+            
+            try {
+                // Test image/IPFS endpoints from CONFIG
+                const endpoints = CONFIG.ipfsEndpoints;
+                
+                let resultContent = '';
+                let allSuccessful = true;
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        log(`Testing endpoint: ${endpoint.name} (${endpoint.url})`);
+                        
+                        const startTime = Date.now();
+                        const response = await fetch(endpoint.url, {
+                            method: 'GET',
+                            mode: 'cors',
+                            timeout: 10000 // 10 second timeout
+                        });
+                        
+                        const responseTime = Date.now() - startTime;
+                        
+                        if (response.ok) {
+                            const contentType = response.headers.get('content-type');
+                            const contentLength = response.headers.get('content-length');
+                            
+                            log(`${endpoint.name} test successful (${responseTime}ms)`);
+                            resultContent += `<div class="test-result">✅ ${endpoint.name}: Accessible</div>`;
+                            resultContent += `<div class="test-details">
+                                Response time: ${responseTime}ms<br>
+                                Content Type: ${contentType || 'Unknown'}<br>
+                                Size: ${contentLength ? `${Math.round(contentLength / 1024)} KB` : 'Unknown'}
+                            </div>`;
+                        } else {
+                            log(`${endpoint.name} test failed with status ${response.status}`);
+                            resultContent += `<div class="test-result">❌ ${endpoint.name}: Error ${response.status}</div>`;
+                            allSuccessful = false;
+                        }
+                        
+                    } catch (error) {
+                        log(`${endpoint.name} test failed: ${error.message}`);
+                        resultContent += `<div class="test-result">❌ ${endpoint.name}: ${error.message}</div>`;
+                        allSuccessful = false;
+                    }
+                }
+                
+                if (allSuccessful) {
+                    updateStatus('ipfsStatus', 'IPFS connectivity successful', 'success');
+                } else {
+                    updateStatus('ipfsStatus', 'IPFS connectivity issues detected', 'error');
+                }
+                
+                updateResult('ipfsResult', resultContent);
+                
+            } catch (error) {
+                log(`IPFS connectivity test failed: ${error.message}`);
+                updateStatus('ipfsStatus', `Test failed: ${error.message}`, 'error');
+                updateResult('ipfsResult', `
+                    <div class="test-result">❌ IPFS connectivity test failed</div>
+                    <div class="test-details">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `);
+            }
+        }
+        
+        // 4. Network Diagnostics
+        async function runNetworkDiagnostics() {
+            log("Starting network diagnostics...");
+            updateStatus('networkStatus', 'Running network diagnostics...', 'warning');
+            
+            try {
+                // Collect basic network info
+                const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                const online = navigator.onLine;
+                
+                let networkInfo = {
+                    online: online,
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    connection: connection ? {
+                        effectiveType: connection.effectiveType,
+                        downlink: connection.downlink,
+                        rtt: connection.rtt,
+                        saveData: connection.saveData
+                    } : 'Not available'
+                };
+                
+                log(`Network diagnostics completed: ${JSON.stringify(networkInfo)}`);
+                
+                // Measure latency to common endpoints from CONFIG
+                const latencyChecks = CONFIG.networkEndpoints;
+                
+                let latencies = [];
+                
+                for (const endpoint of latencyChecks) {
+                    try {
+                        log(`Measuring latency to ${endpoint.name}...`);
+                        
+                        const startTime = Date.now();
+                        await fetch(`${endpoint.url}/favicon.ico?cachebust=${Date.now()}`, {
+                            method: 'HEAD',
+                            mode: 'no-cors',
+                            cache: 'no-store',
+                            timeout: 5000
+                        });
+                        const latency = Date.now() - startTime;
+                        
+                        latencies.push({
+                            endpoint: endpoint.name,
+                            latency: latency,
+                            status: 'success'
+                        });
+                        
+                        log(`Latency to ${endpoint.name}: ${latency}ms`);
+                        
+                    } catch (error) {
+                        latencies.push({
+                            endpoint: endpoint.name,
+                            latency: null,
+                            status: 'failed',
+                            error: error.message
+                        });
+                        
+                        log(`Failed to measure latency to ${endpoint.name}: ${error.message}`);
+                    }
+                }
+                
+                // Generate results
+                let resultContent = `
+                    <div class="test-result">${online ? '✅ Internet Connection Available' : '❌ No Internet Connection'}</div>
+                    <div class="test-details">
+                        <strong>Browser:</strong> ${networkInfo.userAgent}<br>
+                        <strong>Platform:</strong> ${networkInfo.platform}<br>
+                        <strong>Language:</strong> ${networkInfo.language}<br>
+                `;
+                
+                if (typeof networkInfo.connection === 'object') {
+                    resultContent += `
+                        <strong>Connection Type:</strong> ${networkInfo.connection.effectiveType || 'Unknown'}<br>
+                        <strong>Downlink:</strong> ${networkInfo.connection.downlink ? `${networkInfo.connection.downlink} Mbps` : 'Unknown'}<br>
+                        <strong>RTT:</strong> ${networkInfo.connection.rtt ? `${networkInfo.connection.rtt} ms` : 'Unknown'}<br>
+                        <strong>Data Saver:</strong> ${networkInfo.connection.saveData ? 'Enabled' : 'Disabled'}<br>
+                    `;
+                }
+                
+                resultContent += `<strong>Latency Tests:</strong><br>`;
+                
+                for (const test of latencies) {
+                    if (test.status === 'success') {
+                        resultContent += `- ${test.endpoint}: ${test.latency}ms<br>`;
+                    } else {
+                        resultContent += `- ${test.endpoint}: Failed (${test.error})<br>`;
+                    }
+                }
+                
+                resultContent += `</div>`;
+                
+                // Determine if there are any network issues
+                const hasLatencyIssues = latencies.filter(l => l.status === 'success' && l.latency > 500).length > 0;
+                const hasConnectionIssues = latencies.filter(l => l.status === 'failed').length > 0;
+                
+                if (!online) {
+                    updateStatus('networkStatus', 'No internet connection', 'error');
+                } else if (hasConnectionIssues) {
+                    updateStatus('networkStatus', 'Connection issues detected', 'error');
+                } else if (hasLatencyIssues) {
+                    updateStatus('networkStatus', 'High latency detected', 'warning');
+                } else {
+                    updateStatus('networkStatus', 'Network diagnostics completed', 'success');
+                }
+                
+                updateResult('networkResult', resultContent);
+                
+            } catch (error) {
+                log(`Network diagnostics failed: ${error.message}`);
+                
+                updateStatus('networkStatus', `Diagnostics failed: ${error.message}`, 'error');
+                updateResult('networkResult', `
+                    <div class="test-result">❌ Network diagnostics failed</div>
+                    <div class="test-details">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `);
+            }
+        }
+        
+        // Initialize
+        log("Connection diagnostic tool initialized.");
+    </script>
+</body>
+</html>

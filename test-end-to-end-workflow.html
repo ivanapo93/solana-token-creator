@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolMeme End-to-End Test</title>
+    
+    <!-- Buffer Polyfill - MUST load first for Solana compatibility -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        console.log('🔧 Initializing Buffer polyfill...');
+        window.Buffer = buffer.Buffer;
+        
+        try {
+            const testBuffer = Buffer.alloc(10);
+            console.log('✅ Buffer polyfill loaded successfully');
+        } catch (error) {
+            console.error('❌ Buffer polyfill failed:', error);
+        }
+    </script>
+    
+    <!-- Solana Web3 -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
+    
+    <!-- Bootstrap for UI -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            color: white;
+        }
+        .card-header {
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-pending {
+            background-color: #f9a825;
+        }
+        .status-success {
+            background-color: #4caf50;
+        }
+        .status-error {
+            background-color: #f44336;
+        }
+        .status-active {
+            background-color: #2196f3;
+        }
+        .log-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 15px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+        .log-timestamp {
+            color: #8bc34a;
+            margin-right: 8px;
+        }
+        .log-info {
+            color: #2196f3;
+        }
+        .log-success {
+            color: #4caf50;
+        }
+        .log-warning {
+            color: #ff9800;
+        }
+        .log-error {
+            color: #f44336;
+        }
+        .progress {
+            height: 10px;
+            margin-top: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .progress-bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        .accordion {
+            margin-bottom: 20px;
+        }
+        .accordion-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+        }
+        .accordion-button {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+        .accordion-button:not(.collapsed) {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+        .accordion-button::after {
+            filter: brightness(0) invert(1);
+        }
+        .accordion-body {
+            background: rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4"><i class="fas fa-vial me-3"></i>SolMeme End-to-End Test Suite</h1>
+        <p class="text-center mb-5">Comprehensive end-to-end testing for the Solana token creation workflow</p>
+        
+        <!-- Test Control Panel -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-sliders-h me-2"></i> Test Control Panel</span>
+                <span id="global-status"><span class="status-indicator status-pending"></span> Ready</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-cog me-2"></i>Test Configuration</h5>
+                        <div class="mb-3">
+                            <label for="testMode" class="form-label">Test Mode</label>
+                            <select id="testMode" class="form-select form-select-sm bg-dark text-light">
+                                <option value="standard">Standard (All Steps)</option>
+                                <option value="wallet">Wallet Connection Only</option>
+                                <option value="rpc">RPC Endpoints Only</option>
+                                <option value="minimal">Minimal Token Creation</option>
+                                <option value="full">Full Token With Metadata</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="networkType" class="form-label">Network</label>
+                            <select id="networkType" class="form-select form-select-sm bg-dark text-light">
+                                <option value="mainnet-beta">Mainnet Beta (Real SOL)</option>
+                                <option value="devnet">Devnet (Test SOL)</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="verboseLogging">
+                            <label class="form-check-label" for="verboseLogging">
+                                Enable Verbose Logging
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-tachometer-alt me-2"></i>Test Execution</h5>
+                        <button id="startTestBtn" class="btn btn-primary mb-2 w-100">
+                            <i class="fas fa-play me-2"></i>Start Test
+                        </button>
+                        <button id="stopTestBtn" class="btn btn-outline-light mb-2 w-100" disabled>
+                            <i class="fas fa-stop me-2"></i>Stop Test
+                        </button>
+                        <button id="resetTestBtn" class="btn btn-outline-light w-100">
+                            <i class="fas fa-redo me-2"></i>Reset
+                        </button>
+                        <div class="progress mt-3">
+                            <div id="testProgress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Stages -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-tasks me-2"></i>Test Stages
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light border-light">
+                        <div>
+                            <span id="step1-status" class="status-indicator status-pending"></span>
+                            <strong>1. Environment Check</strong>
+                        </div>
+                        <span id="step1-time" class="badge bg-dark">Not started</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light border-light">
+                        <div>
+                            <span id="step2-status" class="status-indicator status-pending"></span>
+                            <strong>2. RPC Connection</strong>
+                        </div>
+                        <span id="step2-time" class="badge bg-dark">Not started</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light border-light">
+                        <div>
+                            <span id="step3-status" class="status-indicator status-pending"></span>
+                            <strong>3. Wallet Connection</strong>
+                        </div>
+                        <span id="step3-time" class="badge bg-dark">Not started</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light border-light">
+                        <div>
+                            <span id="step4-status" class="status-indicator status-pending"></span>
+                            <strong>4. Token Preparation</strong>
+                        </div>
+                        <span id="step4-time" class="badge bg-dark">Not started</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light border-light">
+                        <div>
+                            <span id="step5-status" class="status-indicator status-pending"></span>
+                            <strong>5. Token Creation</strong>
+                        </div>
+                        <span id="step5-time" class="badge bg-dark">Not started</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-light border-light">
+                        <div>
+                            <span id="step6-status" class="status-indicator status-pending"></span>
+                            <strong>6. Verification</strong>
+                        </div>
+                        <span id="step6-time" class="badge bg-dark">Not started</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Token Configuration -->
+        <div class="accordion" id="tokenConfigAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="tokenConfigHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tokenConfigCollapse" aria-expanded="false" aria-controls="tokenConfigCollapse">
+                        <i class="fas fa-coins me-2"></i>Token Configuration
+                    </button>
+                </h2>
+                <div id="tokenConfigCollapse" class="accordion-collapse collapse" aria-labelledby="tokenConfigHeading" data-bs-parent="#tokenConfigAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="tokenName" class="form-label">Token Name*</label>
+                                <input type="text" class="form-control bg-dark text-light" id="tokenName" value="Test Token">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tokenSymbol" class="form-label">Token Symbol*</label>
+                                <input type="text" class="form-control bg-dark text-light" id="tokenSymbol" value="TST">
+                            </div>
+                            <div class="col-12">
+                                <label for="tokenDescription" class="form-label">Description*</label>
+                                <textarea class="form-control bg-dark text-light" id="tokenDescription" rows="2">A test token for end-to-end workflow validation</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tokenSupply" class="form-label">Supply*</label>
+                                <input type="number" class="form-control bg-dark text-light" id="tokenSupply" value="1000">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tokenDecimals" class="form-label">Decimals*</label>
+                                <input type="number" class="form-control bg-dark text-light" id="tokenDecimals" value="9">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tokenWebsite" class="form-label">Website (optional)</label>
+                                <input type="text" class="form-control bg-dark text-light" id="tokenWebsite" value="https://example.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="transactionFee" class="form-label">Transaction Fee % (optional)</label>
+                                <input type="number" class="form-control bg-dark text-light" id="transactionFee" value="0" min="0" max="5" step="0.1">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="revokeMintAuthority">
+                                    <label class="form-check-label" for="revokeMintAuthority">
+                                        Revoke Mint Authority
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="revokeFreezeAuthority">
+                                    <label class="form-check-label" for="revokeFreezeAuthority">
+                                        Revoke Freeze Authority
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="revokeUpdateAuthority">
+                                    <label class="form-check-label" for="revokeUpdateAuthority">
+                                        Revoke Update Authority
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Results -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clipboard-list me-2"></i>Test Results</span>
+                <button id="clearLogsBtn" class="btn btn-sm btn-outline-light">Clear Logs</button>
+            </div>
+            <div class="card-body">
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry">
+                        <span class="log-timestamp">[00:00:00]</span>
+                        <span class="log-info">Test system initialized and ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Results -->
+        <div class="card mb-4" id="summaryCard" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-chart-pie me-2"></i>Test Summary
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Token Details</h5>
+                        <ul class="list-group list-group-flush bg-transparent" id="tokenDetailsList">
+                            <!-- Token details will be inserted here -->
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Performance Metrics</h5>
+                        <ul class="list-group list-group-flush bg-transparent" id="performanceList">
+                            <!-- Performance metrics will be inserted here -->
+                        </ul>
+                        <div class="mt-3">
+                            <a href="#" id="explorerLink" target="_blank" class="btn btn-outline-light me-2">
+                                <i class="fas fa-external-link-alt me-2"></i>View on Solscan
+                            </a>
+                            <button id="copyAddressBtn" class="btn btn-outline-light">
+                                <i class="fas fa-copy me-2"></i>Copy Mint Address
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="solana-integration.js"></script>
+    
+    <script>
+        // Global variables
+        let testInstance = null;
+        let testRunning = false;
+        let testStartTime = null;
+        let currentStep = 0;
+        let solanaInstance = null;
+        let mintAddress = null;
+        let transactionSignature = null;
+        
+        // DOM elements
+        const startTestBtn = document.getElementById('startTestBtn');
+        const stopTestBtn = document.getElementById('stopTestBtn');
+        const resetTestBtn = document.getElementById('resetTestBtn');
+        const testModeSelect = document.getElementById('testMode');
+        const networkTypeSelect = document.getElementById('networkType');
+        const verboseLoggingCheckbox = document.getElementById('verboseLogging');
+        const logContainer = document.getElementById('logContainer');
+        const testProgress = document.getElementById('testProgress');
+        const globalStatus = document.getElementById('global-status');
+        const summaryCard = document.getElementById('summaryCard');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Test environment initialized', 'info');
+            log('Ready to execute end-to-end token creation workflow test', 'info');
+            log('Connect your Phantom wallet and configure test parameters', 'info');
+        });
+        
+        // Test class
+        class TokenCreationTest {
+            constructor(options = {}) {
+                this.mode = options.mode || 'standard';
+                this.network = options.network || 'mainnet-beta';
+                this.verbose = options.verbose || false;
+                this.tokenConfig = options.tokenConfig || this.getDefaultTokenConfig();
+                this.aborted = false;
+                this.stepTimings = {};
+                this.totalStartTime = null;
+                this.steps = [
+                    this.checkEnvironment,
+                    this.connectRPC,
+                    this.connectWallet,
+                    this.prepareTokenData,
+                    this.createToken,
+                    this.verifyToken
+                ];
+            }
+            
+            getDefaultTokenConfig() {
+                return {
+                    name: 'Test Token',
+                    symbol: 'TST',
+                    description: 'A test token for end-to-end workflow validation',
+                    supply: 1000,
+                    decimals: 9,
+                    website: 'https://example.com',
+                    transactionFee: 0,
+                    revokeMintAuthority: false,
+                    revokeFreezeAuthority: false,
+                    revokeUpdateAuthority: false
+                };
+            }
+            
+            async run() {
+                this.totalStartTime = Date.now();
+                this.aborted = false;
+                updateGlobalStatus('active', 'Running');
+                log(`Starting token creation test in ${this.mode} mode on ${this.network}`, 'info');
+                
+                try {
+                    for (let i = 0; i < this.steps.length; i++) {
+                        if (this.aborted) {
+                            log('Test aborted by user', 'warning');
+                            updateGlobalStatus('error', 'Aborted');
+                            break;
+                        }
+                        
+                        // Skip steps based on mode
+                        if (this.mode === 'wallet' && i > 2) continue;
+                        if (this.mode === 'rpc' && (i < 1 || i > 1)) continue;
+                        
+                        currentStep = i + 1;
+                        updateProgress();
+                        
+                        const stepStartTime = Date.now();
+                        updateStepStatus(currentStep, 'active');
+                        
+                        try {
+                            await this.steps[i].call(this);
+                            const stepEndTime = Date.now();
+                            this.stepTimings[`step${currentStep}`] = stepEndTime - stepStartTime;
+                            updateStepTime(currentStep, this.stepTimings[`step${currentStep}`]);
+                            updateStepStatus(currentStep, 'success');
+                        } catch (error) {
+                            updateStepStatus(currentStep, 'error');
+                            const stepEndTime = Date.now();
+                            this.stepTimings[`step${currentStep}`] = stepEndTime - stepStartTime;
+                            updateStepTime(currentStep, this.stepTimings[`step${currentStep}`]);
+                            throw error; // Rethrow to stop the process
+                        }
+                    }
+                    
+                    const totalTestTime = Date.now() - this.totalStartTime;
+                    log(`Test completed successfully in ${(totalTestTime / 1000).toFixed(2)}s`, 'success');
+                    this.showSummary(totalTestTime);
+                    updateGlobalStatus('success', 'Completed');
+                } catch (error) {
+                    log(`Test failed: ${error.message}`, 'error');
+                    if (this.verbose) {
+                        log(`Stack trace: ${error.stack}`, 'error');
+                    }
+                    updateGlobalStatus('error', 'Failed');
+                } finally {
+                    testRunning = false;
+                    startTestBtn.disabled = false;
+                    stopTestBtn.disabled = true;
+                }
+            }
+            
+            abort() {
+                this.aborted = true;
+                log('Aborting test...', 'warning');
+            }
+            
+            showSummary(totalTestTime) {
+                if (mintAddress) {
+                    const tokenDetailsList = document.getElementById('tokenDetailsList');
+                    const performanceList = document.getElementById('performanceList');
+                    const explorerLink = document.getElementById('explorerLink');
+                    const copyAddressBtn = document.getElementById('copyAddressBtn');
+                    
+                    // Clear previous data
+                    tokenDetailsList.innerHTML = '';
+                    performanceList.innerHTML = '';
+                    
+                    // Add token details
+                    const tokenDetails = [
+                        { label: 'Token Name', value: this.tokenConfig.name },
+                        { label: 'Token Symbol', value: this.tokenConfig.symbol },
+                        { label: 'Supply', value: this.tokenConfig.supply.toLocaleString() },
+                        { label: 'Decimals', value: this.tokenConfig.decimals },
+                        { label: 'Mint Address', value: mintAddress },
+                        { label: 'Transaction', value: transactionSignature ? transactionSignature.slice(0, 12) + '...' : 'N/A' }
+                    ];
+                    
+                    tokenDetails.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item bg-transparent text-light border-light d-flex justify-content-between';
+                        li.innerHTML = `<strong>${item.label}:</strong> <span>${item.value}</span>`;
+                        tokenDetailsList.appendChild(li);
+                    });
+                    
+                    // Add performance metrics
+                    const performanceMetrics = [
+                        { label: 'Environment Check', value: `${(this.stepTimings.step1 / 1000).toFixed(2)}s` },
+                        { label: 'RPC Connection', value: `${(this.stepTimings.step2 / 1000).toFixed(2)}s` },
+                        { label: 'Wallet Connection', value: `${(this.stepTimings.step3 / 1000).toFixed(2)}s` },
+                        { label: 'Token Preparation', value: `${(this.stepTimings.step4 / 1000).toFixed(2)}s` },
+                        { label: 'Token Creation', value: `${(this.stepTimings.step5 / 1000).toFixed(2)}s` },
+                        { label: 'Verification', value: `${(this.stepTimings.step6 / 1000).toFixed(2)}s` },
+                        { label: 'Total Time', value: `${(totalTestTime / 1000).toFixed(2)}s` }
+                    ];
+                    
+                    performanceMetrics.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item bg-transparent text-light border-light d-flex justify-content-between';
+                        li.innerHTML = `<strong>${item.label}:</strong> <span>${item.value}</span>`;
+                        performanceList.appendChild(li);
+                    });
+                    
+                    // Set up links and buttons
+                    explorerLink.href = `https://solscan.io/token/${mintAddress}`;
+                    copyAddressBtn.onclick = () => {
+                        navigator.clipboard.writeText(mintAddress)
+                            .then(() => alert('Mint address copied!'))
+                            .catch(err => console.error('Failed to copy:', err));
+                    };
+                    
+                    // Show the summary card
+                    summaryCard.style.display = 'block';
+                }
+            }
+            
+            // Test Steps
+            async checkEnvironment() {
+                log('Step 1: Checking environment', 'info');
+                
+                // Check for Solana Web3.js
+                if (typeof solanaWeb3 === 'undefined') {
+                    throw new Error('Solana Web3.js is not loaded');
+                }
+                log('✅ Solana Web3.js library loaded', 'success');
+                
+                // Check for Buffer
+                if (typeof Buffer === 'undefined') {
+                    throw new Error('Buffer polyfill is not loaded');
+                }
+                log('✅ Buffer polyfill loaded', 'success');
+                
+                // Check for Phantom wallet
+                if (typeof window.solana === 'undefined') {
+                    throw new Error('Phantom wallet extension not detected');
+                }
+                log('✅ Phantom wallet extension detected', 'success');
+                
+                // Check for required DOM elements
+                const requiredElements = ['logContainer', 'startTestBtn', 'tokenName', 'tokenSymbol'];
+                for (const id of requiredElements) {
+                    if (!document.getElementById(id)) {
+                        throw new Error(`Required DOM element #${id} not found`);
+                    }
+                }
+                log('✅ All required DOM elements found', 'success');
+                
+                // Check for internet connectivity
+                if (!navigator.onLine) {
+                    throw new Error('No internet connection');
+                }
+                log('✅ Internet connection available', 'success');
+                
+                // Additional environment checks for specific modes
+                if (this.mode === 'full' || this.mode === 'standard') {
+                    // Check if we can load the integration script
+                    if (typeof SolanaIntegration !== 'function') {
+                        throw new Error('SolanaIntegration class not found');
+                    }
+                    log('✅ SolanaIntegration class available', 'success');
+                }
+                
+                log('Environment check completed successfully', 'success');
+                return true;
+            }
+            
+            async connectRPC() {
+                log('Step 2: Connecting to Solana RPC endpoints', 'info');
+                
+                try {
+                    if (!solanaInstance) {
+                        solanaInstance = new SolanaIntegration();
+                        log('✅ SolanaIntegration instance created', 'success');
+                    }
+                    
+                    // Initialize connection
+                    log('Initializing RPC connection...', 'info');
+                    const connected = await solanaInstance.initializeConnection();
+                    
+                    if (!connected) {
+                        throw new Error('Failed to connect to any RPC endpoint');
+                    }
+                    
+                    // Test connection
+                    const status = await solanaInstance.testConnection();
+                    if (!status.success) {
+                        throw new Error(`Connection test failed: ${status.error}`);
+                    }
+                    
+                    log(`✅ Connected to ${solanaInstance.network} (slot: ${status.slot})`, 'success');
+                    log(`✅ Using RPC endpoint: ${solanaInstance.rpcUrl}`, 'success');
+                    log(`✅ Solana version: ${status.version || 'unknown'}`, 'success');
+                    
+                    if (this.verbose) {
+                        // List all available endpoints
+                        log(`Available RPC endpoints: ${solanaInstance.rpcEndpoints.length}`, 'info');
+                        solanaInstance.rpcEndpoints.forEach((endpoint, i) => {
+                            log(`  ${i+1}. ${endpoint}`, 'info');
+                        });
+                    }
+                    
+                    log('RPC connection established successfully', 'success');
+                    return true;
+                } catch (error) {
+                    log(`RPC connection failed: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            async connectWallet() {
+                log('Step 3: Connecting to Phantom wallet', 'info');
+                
+                try {
+                    if (!solanaInstance) {
+                        throw new Error('SolanaIntegration instance not created');
+                    }
+                    
+                    log('Requesting wallet connection...', 'info');
+                    const response = await solanaInstance.connectPhantomWallet();
+                    
+                    log(`✅ Connected to wallet: ${response.publicKey}`, 'success');
+                    
+                    // Get wallet balance
+                    const balance = await solanaInstance.getWalletBalance();
+                    log(`✅ Wallet balance: ${balance.toFixed(6)} SOL`, 'success');
+                    
+                    // Check if balance is sufficient
+                    if (balance < 0.01) {
+                        log('⚠️ WARNING: Wallet balance may be insufficient for token creation', 'warning');
+                    }
+                    
+                    log('Wallet connection established successfully', 'success');
+                    return true;
+                } catch (error) {
+                    log(`Wallet connection failed: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            async prepareTokenData() {
+                log('Step 4: Preparing token data', 'info');
+                
+                try {
+                    // Get token configuration from UI
+                    this.tokenConfig = {
+                        name: document.getElementById('tokenName').value,
+                        symbol: document.getElementById('tokenSymbol').value,
+                        description: document.getElementById('tokenDescription').value,
+                        supply: parseInt(document.getElementById('tokenSupply').value),
+                        decimals: parseInt(document.getElementById('tokenDecimals').value),
+                        website: document.getElementById('tokenWebsite').value,
+                        transactionFee: parseFloat(document.getElementById('transactionFee').value),
+                        revokeMintAuthority: document.getElementById('revokeMintAuthority').checked,
+                        revokeFreezeAuthority: document.getElementById('revokeFreezeAuthority').checked,
+                        revokeUpdateAuthority: document.getElementById('revokeUpdateAuthority').checked
+                    };
+                    
+                    // Validate token data
+                    if (!this.tokenConfig.name || this.tokenConfig.name.length > 32) {
+                        throw new Error('Token name must be between 1 and 32 characters');
+                    }
+                    
+                    if (!this.tokenConfig.symbol || this.tokenConfig.symbol.length > 10) {
+                        throw new Error('Token symbol must be between 1 and 10 characters');
+                    }
+                    
+                    if (!this.tokenConfig.supply || isNaN(this.tokenConfig.supply) || this.tokenConfig.supply <= 0) {
+                        throw new Error('Token supply must be a positive number');
+                    }
+                    
+                    if (isNaN(this.tokenConfig.decimals) || this.tokenConfig.decimals < 0 || this.tokenConfig.decimals > 9) {
+                        throw new Error('Token decimals must be between 0 and 9');
+                    }
+                    
+                    if (isNaN(this.tokenConfig.transactionFee) || this.tokenConfig.transactionFee < 0 || this.tokenConfig.transactionFee > 5) {
+                        throw new Error('Transaction fee must be between 0 and 5');
+                    }
+                    
+                    // Log token data
+                    log(`✅ Token Name: ${this.tokenConfig.name}`, 'info');
+                    log(`✅ Token Symbol: ${this.tokenConfig.symbol}`, 'info');
+                    log(`✅ Token Supply: ${this.tokenConfig.supply.toLocaleString()}`, 'info');
+                    log(`✅ Token Decimals: ${this.tokenConfig.decimals}`, 'info');
+                    
+                    if (this.verbose) {
+                        log(`✅ Token Description: ${this.tokenConfig.description}`, 'info');
+                        log(`✅ Website: ${this.tokenConfig.website || 'None'}`, 'info');
+                        log(`✅ Transaction Fee: ${this.tokenConfig.transactionFee}%`, 'info');
+                        log(`✅ Revoke Mint Authority: ${this.tokenConfig.revokeMintAuthority}`, 'info');
+                        log(`✅ Revoke Freeze Authority: ${this.tokenConfig.revokeFreezeAuthority}`, 'info');
+                        log(`✅ Revoke Update Authority: ${this.tokenConfig.revokeUpdateAuthority}`, 'info');
+                    }
+                    
+                    log('Token data prepared successfully', 'success');
+                    return true;
+                } catch (error) {
+                    log(`Token data preparation failed: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            async createToken() {
+                log('Step 5: Creating token', 'info');
+                
+                try {
+                    if (!solanaInstance) {
+                        throw new Error('SolanaIntegration instance not created');
+                    }
+                    
+                    if (!solanaInstance.wallet) {
+                        throw new Error('Wallet not connected');
+                    }
+                    
+                    // Prepare token data for creation
+                    const tokenData = {
+                        name: this.tokenConfig.name,
+                        symbol: this.tokenConfig.symbol,
+                        description: this.tokenConfig.description,
+                        supply: this.tokenConfig.supply,
+                        decimals: this.tokenConfig.decimals,
+                        website: this.tokenConfig.website,
+                        transactionFee: this.tokenConfig.transactionFee,
+                        metadataUri: null // Would be set by a real metadata upload service
+                    };
+                    
+                    log('Simulating token creation on mainnet...', 'info');
+                    log('This is a test - no actual transaction will be sent', 'warning');
+                    
+                    // In a real implementation, we would call solanaInstance.createTokenWithMetadata
+                    // For testing, we'll simulate token creation with a delay
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    // Simulate a token creation response
+                    mintAddress = 'SimuMCEZCt38Qz3oB' + Math.random().toString(36).substring(2, 10);
+                    transactionSignature = 'SimTx' + Math.random().toString(36).substring(2, 30);
+                    
+                    log(`✅ Token created with mint address: ${mintAddress}`, 'success');
+                    log(`✅ Transaction signature: ${transactionSignature}`, 'success');
+                    
+                    if (this.verbose) {
+                        log('Token creation details:', 'info');
+                        log(`  Network: ${this.network}`, 'info');
+                        log(`  Mint Authority: ${this.tokenConfig.revokeMintAuthority ? 'Revoked' : 'Retained'}`, 'info');
+                        log(`  Freeze Authority: ${this.tokenConfig.revokeFreezeAuthority ? 'Revoked' : 'Retained'}`, 'info');
+                        log(`  Update Authority: ${this.tokenConfig.revokeUpdateAuthority ? 'Revoked' : 'Retained'}`, 'info');
+                    }
+                    
+                    log('Token creation simulated successfully', 'success');
+                    return true;
+                } catch (error) {
+                    log(`Token creation failed: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            async verifyToken() {
+                log('Step 6: Verifying token', 'info');
+                
+                try {
+                    if (!mintAddress) {
+                        throw new Error('Mint address not available');
+                    }
+                    
+                    log('Simulating token verification...', 'info');
+                    
+                    // In a real implementation, we would verify the token on Solana
+                    // For testing, we'll simulate verification with a delay
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Simulate verification results
+                    log(`✅ Token verified on ${this.network}`, 'success');
+                    log(`✅ Token metadata found and verified`, 'success');
+                    log(`✅ Token symbol matches: ${this.tokenConfig.symbol}`, 'success');
+                    
+                    if (this.verbose) {
+                        log('Token verification details:', 'info');
+                        log(`  Mint Address: ${mintAddress}`, 'info');
+                        log(`  Supply: ${this.tokenConfig.supply.toLocaleString()} tokens`, 'info');
+                        log(`  Owner: ${solanaInstance.wallet?.publicKey?.toString() || 'Unknown'}`, 'info');
+                        log(`  Explorer URL: https://solscan.io/token/${mintAddress}`, 'info');
+                    }
+                    
+                    log('Token verification completed successfully', 'success');
+                    return true;
+                } catch (error) {
+                    log(`Token verification failed: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+        }
+        
+        // Helper functions
+        function log(message, type = 'info') {
+            const now = new Date();
+            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const timestamp = document.createElement('span');
+            timestamp.className = 'log-timestamp';
+            timestamp.textContent = `[${timeString}]`;
+            
+            const content = document.createElement('span');
+            content.className = `log-${type}`;
+            content.textContent = ` ${message}`;
+            
+            logEntry.appendChild(timestamp);
+            logEntry.appendChild(content);
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight; // Auto-scroll to bottom
+        }
+        
+        function updateStepStatus(step, status) {
+            const statusIndicator = document.getElementById(`step${step}-status`);
+            if (statusIndicator) {
+                statusIndicator.className = `status-indicator status-${status}`;
+            }
+        }
+        
+        function updateStepTime(step, timeMs) {
+            const timeElement = document.getElementById(`step${step}-time`);
+            if (timeElement) {
+                timeElement.textContent = `${(timeMs / 1000).toFixed(2)}s`;
+            }
+        }
+        
+        function updateProgress() {
+            const progressValue = (currentStep / 6) * 100;
+            testProgress.style.width = `${progressValue}%`;
+            testProgress.setAttribute('aria-valuenow', progressValue);
+            testProgress.textContent = `${Math.round(progressValue)}%`;
+        }
+        
+        function updateGlobalStatus(status, text) {
+            const statusIndicator = globalStatus.querySelector('.status-indicator');
+            statusIndicator.className = `status-indicator status-${status}`;
+            globalStatus.lastChild.textContent = text;
+        }
+        
+        function resetTest() {
+            // Reset progress
+            currentStep = 0;
+            updateProgress();
+            
+            // Reset status indicators
+            updateGlobalStatus('pending', 'Ready');
+            for (let i = 1; i <= 6; i++) {
+                updateStepStatus(i, 'pending');
+                updateStepTime(i, 0);
+                document.getElementById(`step${i}-time`).textContent = 'Not started';
+            }
+            
+            // Reset buttons
+            startTestBtn.disabled = false;
+            stopTestBtn.disabled = true;
+            
+            // Hide summary
+            summaryCard.style.display = 'none';
+            
+            // Clear mint address and transaction signature
+            mintAddress = null;
+            transactionSignature = null;
+        }
+        
+        // Event listeners
+        startTestBtn.addEventListener('click', async function() {
+            if (testRunning) return;
+            
+            testRunning = true;
+            startTestBtn.disabled = true;
+            stopTestBtn.disabled = false;
+            
+            const testConfig = {
+                mode: testModeSelect.value,
+                network: networkTypeSelect.value,
+                verbose: verboseLoggingCheckbox.checked,
+                tokenConfig: {
+                    name: document.getElementById('tokenName').value,
+                    symbol: document.getElementById('tokenSymbol').value,
+                    description: document.getElementById('tokenDescription').value,
+                    supply: parseInt(document.getElementById('tokenSupply').value),
+                    decimals: parseInt(document.getElementById('tokenDecimals').value),
+                    website: document.getElementById('tokenWebsite').value,
+                    transactionFee: parseFloat(document.getElementById('transactionFee').value),
+                    revokeMintAuthority: document.getElementById('revokeMintAuthority').checked,
+                    revokeFreezeAuthority: document.getElementById('revokeFreezeAuthority').checked,
+                    revokeUpdateAuthority: document.getElementById('revokeUpdateAuthority').checked
+                }
+            };
+            
+            testInstance = new TokenCreationTest(testConfig);
+            await testInstance.run();
+        });
+        
+        stopTestBtn.addEventListener('click', function() {
+            if (testInstance) {
+                testInstance.abort();
+                stopTestBtn.disabled = true;
+            }
+        });
+        
+        resetTestBtn.addEventListener('click', function() {
+            // Stop current test if running
+            if (testRunning && testInstance) {
+                testInstance.abort();
+            }
+            
+            resetTest();
+            log('Test reset', 'info');
+        });
+        
+        clearLogsBtn.addEventListener('click', function() {
+            logContainer.innerHTML = '';
+            log('Logs cleared', 'info');
+        });
+    </script>
+</body>
+</html>

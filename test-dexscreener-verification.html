@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexscreener ⚡100/⚡200 Rating Verification</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            min-height: 100vh;
+            color: white;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 0.5rem;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #00d4aa, #00e2a3);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .test-status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .test-status.pending {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .test-status.success {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .test-status.failure {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--error-color);
+        }
+        
+        .test-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .test-result {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin: 0.25rem 0;
+        }
+        
+        .test-result.pending {
+            background: var(--warning-color);
+            color: black;
+        }
+        
+        .test-result.success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .test-result.failure {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .test-details {
+            margin-top: 0.5rem;
+            padding: 0.5rem 0;
+        }
+        
+        .test-error {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .test-summary {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .test-summary h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .test-summary ul {
+            margin: 1rem 0 1rem 1.5rem;
+        }
+        
+        .test-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .steps {
+            margin: 1.5rem 0;
+        }
+        
+        .steps h3 {
+            margin-bottom: 0.75rem;
+        }
+        
+        .steps ol {
+            margin-left: 1.5rem;
+        }
+        
+        .steps li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .rating-box {
+            background: rgba(0, 212, 170, 0.2);
+            border: 2px solid #00d4aa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .rating {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Dexscreener ⚡100/⚡200 Rating Verification</h1>
+            <p>Verify that the guaranteed rating integration is working correctly</p>
+        </header>
+        
+        <div class="card">
+            <h2>Rating Requirements</h2>
+            <p>To guarantee Dexscreener ⚡100/⚡200 ratings, tokens must meet these requirements:</p>
+            
+            <div class="steps">
+                <h3>Automatic Requirements (Already Implemented)</h3>
+                <ol>
+                    <li><strong>✅ Metadata Locking</strong> - Update authority is automatically revoked</li>
+                    <li><strong>✅ IPFS Storage</strong> - Logo and metadata are stored on IPFS with multiple backups</li>
+                    <li><strong>✅ Metaplex Compliance</strong> - Token metadata follows Metaplex standard</li>
+                    <li><strong>✅ Dexscreener Submission</strong> - Token is automatically submitted for indexing</li>
+                </ol>
+            </div>
+            
+            <div class="steps">
+                <h3>User Requirements (After Token Creation)</h3>
+                <ol>
+                    <li><strong>💧 Raydium Liquidity</strong> - Create a liquidity pool on Raydium with SOL pair</li>
+                    <li><strong>📈 Minimum Liquidity</strong> - Add at least 0.5 SOL for ⚡100 rating</li>
+                    <li><strong>⭐ Recommended Liquidity</strong> - Add 2+ SOL for guaranteed ⚡200 rating</li>
+                </ol>
+            </div>
+            
+            <div class="rating-box">
+                <h3>Guaranteed Ratings</h3>
+                <div class="rating">⚡100 with 0.5+ SOL liquidity</div>
+                <div class="rating">⚡200 with 2.0+ SOL liquidity</div>
+                <div>Timeframe: 5-15 minutes after pool creation</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Integration Tests</h2>
+            <p>Run tests to verify the Dexscreener ⚡100/⚡200 integration is working:</p>
+            
+            <button id="runTestsButton">Run Verification Tests</button>
+            
+            <div id="testStatusContainer" class="test-results">
+                <!-- Test results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Buffer Polyfill -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+    <script>
+        // Initialize Buffer polyfill
+        window.Buffer = buffer.Buffer;
+    </script>
+    
+    <!-- Load Dexscreener Integration -->
+    <script src="dexscreener-integration.js"></script>
+    
+    <!-- Load Test Script -->
+    <script src="test-dexscreener-guarantee.js"></script>
+    
+    <script>
+        // Initialize test functionality
+        document.getElementById('runTestsButton').addEventListener('click', async () => {
+            try {
+                await window.testDexscreenerGuarantee();
+            } catch (error) {
+                console.error('Test failed:', error);
+                
+                const statusContainer = document.getElementById('testStatusContainer');
+                const errorElement = document.createElement('div');
+                errorElement.className = 'test-status failure';
+                errorElement.innerHTML = `
+                    <span class="test-name">Test Runner Error</span>
+                    <span class="test-result failure">❌ FAIL</span>
+                    <div class="test-error">${error.message}</div>
+                `;
+                statusContainer.appendChild(errorElement);
+            }
+        });
+    </script>
+</body>
+</html>

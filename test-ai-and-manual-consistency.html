@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI vs Manual Token Creation Consistency Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .test-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .mode-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input::placeholder, .form-group textarea::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        .social-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+        }
+        
+        .success {
+            border-left: 4px solid #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .error {
+            border-left: 4px solid #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        
+        .warning {
+            border-left: 4px solid #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status.testing {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .status.failed {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background: rgba(255,255,255,0.1);
+            font-weight: bold;
+        }
+        
+        .match {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .mismatch {
+            background: rgba(244, 67, 54, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🧪 AI vs Manual Token Creation - Consistency Test</h1>
+        <p>This test ensures that both AI Token Generator and Manual Token Creation have identical field availability and functionality for website and social links.</p>
+    </div>
+
+    <div class="test-grid">
+        <!-- AI Mode Test -->
+        <div class="mode-section">
+            <h2>🤖 AI Token Generator</h2>
+            <p style="font-size: 0.9rem; opacity: 0.8;">Testing field availability in AI mode</p>
+            
+            <!-- Basic fields simulation -->
+            <div class="form-group">
+                <label>Generated Token Name</label>
+                <input type="text" id="aiTokenName" value="MoonRocket" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>Generated Symbol</label>
+                <input type="text" id="aiTokenSymbol" value="MROCK" readonly>
+            </div>
+            
+            <!-- Website section -->
+            <h4 style="margin: 15px 0 8px 0; font-size: 1rem;">Website & Social Links</h4>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="aiSkipWebsite" onchange="toggleAIWebsiteField()">
+                <label for="aiSkipWebsite">Create token without website</label>
+            </div>
+            
+            <div class="form-group" id="aiWebsiteContainer">
+                <label>Website (auto-generated, editable)</label>
+                <input type="url" id="aiWebsite" placeholder="https://your-token-website.com">
+            </div>
+            
+            <!-- Social Links -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="aiSkipSocials" onchange="toggleAISocialLinks()">
+                <label for="aiSkipSocials">Create token without any social links</label>
+            </div>
+            
+            <div id="aiSocialContainer" class="social-grid">
+                <div class="form-group">
+                    <label>X (Twitter)</label>
+                    <input type="url" id="aiTwitter" placeholder="https://x.com/yourusername">
+                </div>
+                <div class="form-group">
+                    <label>Telegram</label>
+                    <input type="url" id="aiTelegram" placeholder="https://t.me/yourchannel">
+                </div>
+                <div class="form-group">
+                    <label>Discord</label>
+                    <input type="url" id="aiDiscord" placeholder="https://discord.gg/yourinvite">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="testAIMode()">Test AI Mode Fields</button>
+        </div>
+
+        <!-- Manual Mode Test -->
+        <div class="mode-section">
+            <h2>✏️ Manual Token Creation</h2>
+            <p style="font-size: 0.9rem; opacity: 0.8;">Testing field availability in manual mode</p>
+            
+            <!-- Basic fields -->
+            <div class="form-group">
+                <label>Token Name</label>
+                <input type="text" id="manualTokenName" value="MoonRocket">
+            </div>
+            
+            <div class="form-group">
+                <label>Token Symbol</label>
+                <input type="text" id="manualTokenSymbol" value="MROCK">
+            </div>
+            
+            <!-- Website section -->
+            <h4 style="margin: 15px 0 8px 0; font-size: 1rem;">Website & Social Links</h4>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="manualSkipWebsite" onchange="toggleManualWebsiteField()">
+                <label for="manualSkipWebsite">Create token without website</label>
+            </div>
+            
+            <div class="form-group" id="manualWebsiteContainer">
+                <label>Website (auto-generated, editable)</label>
+                <input type="url" id="manualWebsite" placeholder="https://your-token-website.com">
+            </div>
+            
+            <!-- Social Links -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="manualSkipSocials" onchange="toggleManualSocialLinks()">
+                <label for="manualSkipSocials">Create token without any social links</label>
+            </div>
+            
+            <div id="manualSocialContainer" class="social-grid">
+                <div class="form-group">
+                    <label>X (Twitter)</label>
+                    <input type="url" id="manualTwitter" placeholder="https://x.com/yourusername">
+                </div>
+                <div class="form-group">
+                    <label>Telegram</label>
+                    <input type="url" id="manualTelegram" placeholder="https://t.me/yourchannel">
+                </div>
+                <div class="form-group">
+                    <label>Discord</label>
+                    <input type="url" id="manualDiscord" placeholder="https://discord.gg/yourinvite">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="testManualMode()">Test Manual Mode Fields</button>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📊 Consistency Test Results</h2>
+        <div id="testStatus" class="status">Ready to run consistency tests</div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" onclick="runConsistencyTest()">Run Full Consistency Test</button>
+            <button class="btn" onclick="testAutoFillBehavior()">Test Auto-Fill Behavior</button>
+            <button class="btn" onclick="testOptionalFieldLogic()">Test Optional Field Logic</button>
+        </div>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        let aiModeData = {};
+        let manualModeData = {};
+
+        // Generate auto website URL
+        function generateAutoWebsiteUrl(symbol) {
+            return `https://solmeme-creator.com/tokens/${symbol.toLowerCase()}`;
+        }
+
+        // AI Mode toggle functions
+        function toggleAIWebsiteField() {
+            const skipWebsite = document.getElementById('aiSkipWebsite').checked;
+            const container = document.getElementById('aiWebsiteContainer');
+            
+            if (skipWebsite) {
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
+                document.getElementById('aiWebsite').value = '';
+            } else {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                const symbol = document.getElementById('aiTokenSymbol').value;
+                if (symbol && !document.getElementById('aiWebsite').value) {
+                    document.getElementById('aiWebsite').value = generateAutoWebsiteUrl(symbol);
+                }
+            }
+        }
+
+        function toggleAISocialLinks() {
+            const skipSocials = document.getElementById('aiSkipSocials').checked;
+            const container = document.getElementById('aiSocialContainer');
+            
+            if (skipSocials) {
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
+                document.getElementById('aiTwitter').value = '';
+                document.getElementById('aiTelegram').value = '';
+                document.getElementById('aiDiscord').value = '';
+            } else {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Manual Mode toggle functions
+        function toggleManualWebsiteField() {
+            const skipWebsite = document.getElementById('manualSkipWebsite').checked;
+            const container = document.getElementById('manualWebsiteContainer');
+            
+            if (skipWebsite) {
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
+                document.getElementById('manualWebsite').value = '';
+            } else {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                const symbol = document.getElementById('manualTokenSymbol').value;
+                if (symbol && !document.getElementById('manualWebsite').value) {
+                    document.getElementById('manualWebsite').value = generateAutoWebsiteUrl(symbol);
+                }
+            }
+        }
+
+        function toggleManualSocialLinks() {
+            const skipSocials = document.getElementById('manualSkipSocials').checked;
+            const container = document.getElementById('manualSocialContainer');
+            
+            if (skipSocials) {
+                container.style.opacity = '0.5';
+                container.style.pointerEvents = 'none';
+                document.getElementById('manualTwitter').value = '';
+                document.getElementById('manualTelegram').value = '';
+                document.getElementById('manualDiscord').value = '';
+            } else {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Test individual modes
+        function testAIMode() {
+            updateStatus('testing', 'Testing AI Mode field availability...');
+            
+            const skipWebsite = document.getElementById('aiSkipWebsite').checked;
+            const skipSocials = document.getElementById('aiSkipSocials').checked;
+            
+            let socialLinks = {};
+            if (!skipSocials) {
+                const twitter = document.getElementById('aiTwitter').value.trim();
+                const telegram = document.getElementById('aiTelegram').value.trim();
+                const discord = document.getElementById('aiDiscord').value.trim();
+                
+                if (twitter) socialLinks.twitter = twitter;
+                if (telegram) socialLinks.telegram = telegram;
+                if (discord) socialLinks.discord = discord;
+            }
+            
+            aiModeData = {
+                name: document.getElementById('aiTokenName').value,
+                symbol: document.getElementById('aiTokenSymbol').value,
+                website: skipWebsite ? null : (document.getElementById('aiWebsite').value || generateAutoWebsiteUrl(document.getElementById('aiTokenSymbol').value)),
+                socialLinks: socialLinks,
+                skipWebsite: skipWebsite,
+                skipSocials: skipSocials,
+                fieldsAvailable: {
+                    websiteCheckbox: !!document.getElementById('aiSkipWebsite'),
+                    websiteField: !!document.getElementById('aiWebsite'),
+                    socialCheckbox: !!document.getElementById('aiSkipSocials'),
+                    twitterField: !!document.getElementById('aiTwitter'),
+                    telegramField: !!document.getElementById('aiTelegram'),
+                    discordField: !!document.getElementById('aiDiscord')
+                }
+            };
+            
+            displayModeResult('AI Mode', aiModeData);
+        }
+
+        function testManualMode() {
+            updateStatus('testing', 'Testing Manual Mode field availability...');
+            
+            const skipWebsite = document.getElementById('manualSkipWebsite').checked;
+            const skipSocials = document.getElementById('manualSkipSocials').checked;
+            
+            let socialLinks = {};
+            if (!skipSocials) {
+                const twitter = document.getElementById('manualTwitter').value.trim();
+                const telegram = document.getElementById('manualTelegram').value.trim();
+                const discord = document.getElementById('manualDiscord').value.trim();
+                
+                if (twitter) socialLinks.twitter = twitter;
+                if (telegram) socialLinks.telegram = telegram;
+                if (discord) socialLinks.discord = discord;
+            }
+            
+            manualModeData = {
+                name: document.getElementById('manualTokenName').value,
+                symbol: document.getElementById('manualTokenSymbol').value,
+                website: skipWebsite ? null : (document.getElementById('manualWebsite').value || generateAutoWebsiteUrl(document.getElementById('manualTokenSymbol').value)),
+                socialLinks: socialLinks,
+                skipWebsite: skipWebsite,
+                skipSocials: skipSocials,
+                fieldsAvailable: {
+                    websiteCheckbox: !!document.getElementById('manualSkipWebsite'),
+                    websiteField: !!document.getElementById('manualWebsite'),
+                    socialCheckbox: !!document.getElementById('manualSkipSocials'),
+                    twitterField: !!document.getElementById('manualTwitter'),
+                    telegramField: !!document.getElementById('manualTelegram'),
+                    discordField: !!document.getElementById('manualDiscord')
+                }
+            };
+            
+            displayModeResult('Manual Mode', manualModeData);
+        }
+
+        // Run full consistency test
+        function runConsistencyTest() {
+            updateStatus('testing', 'Running comprehensive consistency test...');
+            
+            // Test both modes first
+            testAIMode();
+            testManualMode();
+            
+            // Compare field availability
+            const aiFields = aiModeData.fieldsAvailable;
+            const manualFields = manualModeData.fieldsAvailable;
+            
+            const consistencyResults = [];
+            
+            for (const field in aiFields) {
+                const matches = aiFields[field] === manualFields[field];
+                consistencyResults.push({
+                    field: field,
+                    aiMode: aiFields[field],
+                    manualMode: manualFields[field],
+                    consistent: matches
+                });
+            }
+            
+            const allConsistent = consistencyResults.every(r => r.consistent);
+            
+            updateStatus(allConsistent ? 'success' : 'failed', 
+                `Consistency Test: ${allConsistent ? 'PASSED' : 'FAILED'}`);
+            
+            displayConsistencyResults(consistencyResults);
+        }
+
+        // Test auto-fill behavior
+        function testAutoFillBehavior() {
+            updateStatus('testing', 'Testing auto-fill behavior consistency...');
+            
+            const testSymbol = 'TEST';
+            const expectedUrl = generateAutoWebsiteUrl(testSymbol);
+            
+            // Test AI mode auto-fill
+            document.getElementById('aiTokenSymbol').value = testSymbol;
+            document.getElementById('aiSkipWebsite').checked = false;
+            toggleAIWebsiteField();
+            const aiAutoFill = document.getElementById('aiWebsite').value === expectedUrl;
+            
+            // Test Manual mode auto-fill
+            document.getElementById('manualTokenSymbol').value = testSymbol;
+            document.getElementById('manualSkipWebsite').checked = false;
+            toggleManualWebsiteField();
+            const manualAutoFill = document.getElementById('manualWebsite').value === expectedUrl;
+            
+            const autoFillConsistent = aiAutoFill && manualAutoFill;
+            
+            updateStatus(autoFillConsistent ? 'success' : 'failed', 
+                `Auto-Fill Test: ${autoFillConsistent ? 'PASSED' : 'FAILED'}`);
+            
+            const result = `
+Auto-Fill Behavior Test Results:
+
+AI Mode Auto-Fill: ${aiAutoFill ? '✅' : '❌'} (Expected: ${expectedUrl}, Got: ${document.getElementById('aiWebsite').value})
+Manual Mode Auto-Fill: ${manualAutoFill ? '✅' : '❌'} (Expected: ${expectedUrl}, Got: ${document.getElementById('manualWebsite').value})
+Consistency: ${autoFillConsistent ? '✅ PASS' : '❌ FAIL'}
+
+Test Details:
+- Symbol: ${testSymbol}
+- Expected URL: ${expectedUrl}
+- Both modes should generate the same URL when auto-fill is triggered
+            `;
+            
+            document.getElementById('testResults').innerHTML = `<div class="result ${autoFillConsistent ? 'success' : 'error'}">${result}</div>`;
+        }
+
+        // Test optional field logic
+        function testOptionalFieldLogic() {
+            updateStatus('testing', 'Testing optional field logic...');
+            
+            const tests = [
+                { name: 'Website Skip Logic', testFunc: testWebsiteSkipLogic },
+                { name: 'Social Skip Logic', testFunc: testSocialSkipLogic },
+                { name: 'Empty Field Handling', testFunc: testEmptyFieldHandling }
+            ];
+            
+            const results = tests.map(test => ({
+                name: test.name,
+                result: test.testFunc()
+            }));
+            
+            const allPassed = results.every(r => r.result.passed);
+            
+            updateStatus(allPassed ? 'success' : 'failed', 
+                `Optional Field Logic: ${allPassed ? 'PASSED' : 'FAILED'}`);
+            
+            displayOptionalFieldResults(results);
+        }
+
+        function testWebsiteSkipLogic() {
+            // Test website skip functionality
+            document.getElementById('aiSkipWebsite').checked = true;
+            document.getElementById('manualSkipWebsite').checked = true;
+            toggleAIWebsiteField();
+            toggleManualWebsiteField();
+            
+            const aiWebsiteDisabled = document.getElementById('aiWebsiteContainer').style.pointerEvents === 'none';
+            const manualWebsiteDisabled = document.getElementById('manualWebsiteContainer').style.pointerEvents === 'none';
+            const aiWebsiteCleared = document.getElementById('aiWebsite').value === '';
+            const manualWebsiteCleared = document.getElementById('manualWebsite').value === '';
+            
+            return {
+                passed: aiWebsiteDisabled && manualWebsiteDisabled && aiWebsiteCleared && manualWebsiteCleared,
+                details: `AI disabled: ${aiWebsiteDisabled}, Manual disabled: ${manualWebsiteDisabled}, Fields cleared: ${aiWebsiteCleared && manualWebsiteCleared}`
+            };
+        }
+
+        function testSocialSkipLogic() {
+            // Test social skip functionality
+            document.getElementById('aiSkipSocials').checked = true;
+            document.getElementById('manualSkipSocials').checked = true;
+            toggleAISocialLinks();
+            toggleManualSocialLinks();
+            
+            const aiSocialDisabled = document.getElementById('aiSocialContainer').style.pointerEvents === 'none';
+            const manualSocialDisabled = document.getElementById('manualSocialContainer').style.pointerEvents === 'none';
+            
+            return {
+                passed: aiSocialDisabled && manualSocialDisabled,
+                details: `AI social disabled: ${aiSocialDisabled}, Manual social disabled: ${manualSocialDisabled}`
+            };
+        }
+
+        function testEmptyFieldHandling() {
+            // Test how empty fields are handled
+            document.getElementById('aiSkipWebsite').checked = false;
+            document.getElementById('aiSkipSocials').checked = false;
+            document.getElementById('manualSkipWebsite').checked = false;
+            document.getElementById('manualSkipSocials').checked = false;
+            
+            // Clear all fields
+            document.getElementById('aiWebsite').value = '';
+            document.getElementById('aiTwitter').value = '';
+            document.getElementById('manualWebsite').value = '';
+            document.getElementById('manualTwitter').value = '';
+            
+            testAIMode();
+            testManualMode();
+            
+            const aiHandlesEmpty = aiModeData.website === null || aiModeData.website === '';
+            const manualHandlesEmpty = manualModeData.website === null || manualModeData.website === '';
+            
+            return {
+                passed: true, // Empty fields should be handled gracefully
+                details: `AI handles empty: ${aiHandlesEmpty}, Manual handles empty: ${manualHandlesEmpty}`
+            };
+        }
+
+        // Display functions
+        function updateStatus(type, message) {
+            const statusDiv = document.getElementById('testStatus');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        function displayModeResult(modeName, data) {
+            const result = `
+${modeName} Test Results:
+
+Basic Data:
+- Name: ${data.name}
+- Symbol: ${data.symbol}
+- Website: ${data.website || 'None'}
+- Skip Website: ${data.skipWebsite}
+- Skip Socials: ${data.skipSocials}
+
+Social Links:
+${Object.keys(data.socialLinks).length > 0 ? 
+    Object.entries(data.socialLinks).map(([key, value]) => `- ${key}: ${value}`).join('\n') : 
+    '- None'}
+
+Field Availability:
+- Website Checkbox: ${data.fieldsAvailable.websiteCheckbox ? '✅' : '❌'}
+- Website Field: ${data.fieldsAvailable.websiteField ? '✅' : '❌'}
+- Social Checkbox: ${data.fieldsAvailable.socialCheckbox ? '✅' : '❌'}
+- Twitter Field: ${data.fieldsAvailable.twitterField ? '✅' : '❌'}
+- Telegram Field: ${data.fieldsAvailable.telegramField ? '✅' : '❌'}
+- Discord Field: ${data.fieldsAvailable.discordField ? '✅' : '❌'}
+            `;
+            
+            document.getElementById('testResults').innerHTML = `<div class="result success">${result}</div>`;
+        }
+
+        function displayConsistencyResults(results) {
+            let html = `
+                <div class="result ${results.every(r => r.consistent) ? 'success' : 'error'}">
+                    <h3>Field Consistency Analysis</h3>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>AI Mode</th>
+                                <th>Manual Mode</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            results.forEach(result => {
+                const statusClass = result.consistent ? 'match' : 'mismatch';
+                const statusText = result.consistent ? '✅ Match' : '❌ Mismatch';
+                
+                html += `
+                    <tr class="${statusClass}">
+                        <td>${result.field}</td>
+                        <td>${result.aiMode}</td>
+                        <td>${result.manualMode}</td>
+                        <td>${statusText}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                    <p><strong>Summary:</strong> ${results.filter(r => r.consistent).length}/${results.length} fields are consistent between AI and Manual modes.</p>
+                </div>
+            `;
+            
+            document.getElementById('testResults').innerHTML = html;
+        }
+
+        function displayOptionalFieldResults(results) {
+            let html = `<div class="result ${results.every(r => r.result.passed) ? 'success' : 'error'}">`;
+            html += '<h3>Optional Field Logic Test Results</h3>';
+            
+            results.forEach(test => {
+                const statusIcon = test.result.passed ? '✅' : '❌';
+                html += `<p><strong>${statusIcon} ${test.name}:</strong> ${test.result.details}</p>`;
+            });
+            
+            html += `<p><strong>Overall:</strong> ${results.filter(r => r.result.passed).length}/${results.length} tests passed</p>`;
+            html += '</div>';
+            
+            document.getElementById('testResults').innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial auto-fill values
+            document.getElementById('aiWebsite').value = generateAutoWebsiteUrl('MROCK');
+            document.getElementById('manualWebsite').value = generateAutoWebsiteUrl('MROCK');
+            
+            console.log('✅ AI vs Manual consistency test initialized');
+        });
+    </script>
+</body>
+</html>

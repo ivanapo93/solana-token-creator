@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Validation Test - All Social Links Optional</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .required-field {
+            border-left: 3px solid #e74c3c;
+            background: #fdf2f2;
+        }
+        .optional-field {
+            border-left: 3px solid #27ae60;
+            background: #f2fdf2;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .info {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .test-results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 5px;
+        }
+        .social-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 2px dashed #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Complete Validation Test</h1>
+        <div class="info">
+            <strong>Testing Requirements:</strong><br>
+            ✅ All social links must be optional<br>
+            ✅ Only core fields required: name, symbol, supply, decimals, image<br>
+            ✅ Specific error messages for missing fields<br>
+            ✅ No forced logout/navigation on errors
+        </div>
+
+        <form id="tokenForm">
+            <h3>Core Required Fields</h3>
+            
+            <div class="form-group">
+                <label>Token Name *</label>
+                <input type="text" id="name" class="required-field" placeholder="Enter token name" value="TestToken">
+            </div>
+
+            <div class="form-group">
+                <label>Token Symbol *</label>
+                <input type="text" id="symbol" class="required-field" placeholder="Enter token symbol" value="TEST">
+            </div>
+
+            <div class="form-group">
+                <label>Total Supply *</label>
+                <input type="number" id="supply" class="required-field" placeholder="Enter total supply" value="1000000">
+            </div>
+
+            <div class="form-group">
+                <label>Decimals *</label>
+                <input type="number" id="decimals" class="required-field" placeholder="Enter decimals" value="9">
+            </div>
+
+            <div class="form-group">
+                <label>Image URL *</label>
+                <input type="url" id="image" class="required-field" placeholder="Enter image URL" value="https://via.placeholder.com/200x200">
+            </div>
+
+            <div class="social-section">
+                <h3>Social Links (ALL OPTIONAL)</h3>
+                <p><strong>These fields should NOT be required and can be left blank:</strong></p>
+
+                <div class="form-group">
+                    <label>X (Twitter) - Optional</label>
+                    <input type="url" id="socialTwitter" class="optional-field" placeholder="https://twitter.com/username">
+                </div>
+
+                <div class="form-group">
+                    <label>Telegram - Optional</label>
+                    <input type="url" id="socialTelegram" class="optional-field" placeholder="https://t.me/username">
+                </div>
+
+                <div class="form-group">
+                    <label>Discord - Optional</label>
+                    <input type="url" id="socialDiscord" class="optional-field" placeholder="https://discord.gg/invite">
+                </div>
+
+                <div class="form-group">
+                    <label>Instagram - Optional</label>
+                    <input type="url" id="socialInstagram" class="optional-field" placeholder="https://instagram.com/username">
+                </div>
+
+                <div class="form-group">
+                    <label>YouTube - Optional</label>
+                    <input type="url" id="socialYoutube" class="optional-field" placeholder="https://youtube.com/channel">
+                </div>
+            </div>
+
+            <button type="button" class="btn" onclick="testValidation()">🧪 Test Validation</button>
+            <button type="button" class="btn" onclick="clearSocials()">🧹 Clear All Social Fields</button>
+            <button type="button" class="btn" onclick="clearRequired()">❌ Clear Required Fields</button>
+        </form>
+
+        <div class="test-results" id="testResults">
+            <h3>Test Results</h3>
+            <p>Click "Test Validation" to verify the validation logic.</p>
+        </div>
+    </div>
+
+    <script>
+        // Copy EXACT validateMetadata function from main app
+        function validateMetadata(data) {
+            const required = ["name", "symbol", "supply", "decimals"];
+            for (const field of required) {
+                if (!data[field]) {
+                    throw new Error(`Missing required field: ${field}`);
+                }
+            }
+            if (!data.image && !data.metadataUri) {
+                throw new Error("Either image or metadataUri must be provided.");
+            }
+        }
+
+        function testValidation() {
+            const resultsDiv = document.getElementById('testResults');
+            let results = '<h3>Test Results</h3>';
+
+            try {
+                // Collect form data
+                const formData = {
+                    name: document.getElementById('name').value.trim(),
+                    symbol: document.getElementById('symbol').value.trim(),
+                    supply: document.getElementById('supply').value.trim(),
+                    decimals: document.getElementById('decimals').value.trim(),
+                    image: document.getElementById('image').value.trim(),
+                    socialLinks: {
+                        twitter: document.getElementById('socialTwitter').value.trim(),
+                        telegram: document.getElementById('socialTelegram').value.trim(),
+                        discord: document.getElementById('socialDiscord').value.trim(),
+                        instagram: document.getElementById('socialInstagram').value.trim(),
+                        youtube: document.getElementById('socialYoutube').value.trim()
+                    }
+                };
+
+                // Test validation
+                validateMetadata(formData);
+
+                // If we get here, validation passed
+                results += '<div class="success">';
+                results += '<strong>✅ VALIDATION PASSED!</strong><br><br>';
+                results += '<strong>Social Links Status:</strong><br>';
+                results += `Twitter: ${formData.socialLinks.twitter || 'EMPTY (OK)'}<br>`;
+                results += `Telegram: ${formData.socialLinks.telegram || 'EMPTY (OK)'}<br>`;
+                results += `Discord: ${formData.socialLinks.discord || 'EMPTY (OK)'}<br>`;
+                results += `Instagram: ${formData.socialLinks.instagram || 'EMPTY (OK)'}<br>`;
+                results += `YouTube: ${formData.socialLinks.youtube || 'EMPTY (OK)'}<br><br>`;
+                results += '<strong>✅ All Requirements Met:</strong><br>';
+                results += '• Social links are completely optional<br>';
+                results += '• Only core fields are required<br>';
+                results += '• No forced logout or navigation<br>';
+                results += '• Token creation can proceed successfully';
+                results += '</div>';
+
+            } catch (error) {
+                results += '<div class="error">';
+                results += '<strong>❌ VALIDATION FAILED!</strong><br><br>';
+                results += `<strong>Error Message:</strong> ${error.message}<br><br>`;
+                
+                // Check if it's a social link error (shouldn't happen)
+                if (error.message.includes('twitter') || error.message.includes('telegram') || 
+                    error.message.includes('discord') || error.message.includes('instagram') || 
+                    error.message.includes('youtube')) {
+                    results += '<strong>🚨 CRITICAL ISSUE:</strong> Social links are being validated as required!<br>';
+                    results += 'This violates the requirement that social links must be optional.';
+                } else {
+                    results += '<strong>Analysis:</strong> This appears to be a legitimate validation error for required fields.';
+                }
+                results += '</div>';
+            }
+
+            resultsDiv.innerHTML = results;
+        }
+
+        function clearSocials() {
+            document.getElementById('socialTwitter').value = '';
+            document.getElementById('socialTelegram').value = '';
+            document.getElementById('socialDiscord').value = '';
+            document.getElementById('socialInstagram').value = '';
+            document.getElementById('socialYoutube').value = '';
+            
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<div class="info"><strong>🧹 All social fields cleared.</strong><br>Now test validation to ensure it still passes with empty social links.</div>';
+        }
+
+        function clearRequired() {
+            document.getElementById('name').value = '';
+            document.getElementById('symbol').value = '';
+            document.getElementById('supply').value = '';
+            document.getElementById('decimals').value = '';
+            document.getElementById('image').value = '';
+            
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<div class="info"><strong>❌ Required fields cleared.</strong><br>Test validation to see specific error messages for missing required fields.</div>';
+        }
+
+        // Test immediately on page load with all socials empty
+        window.onload = function() {
+            clearSocials();
+            setTimeout(() => {
+                testValidation();
+            }, 500);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helius REST API Token Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #2d1b69;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .result {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .api-key-input {
+            position: relative;
+        }
+
+        .api-key-input button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f1f1f1;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        pre {
+            white-space: pre-wrap;
+        }
+
+        .step {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+
+        .step.active {
+            border-left-color: #ffc107;
+            background: #fff8e1;
+        }
+
+        .step.completed {
+            border-left-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .step.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+            display: block;
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            padding-top: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Helius REST API Token Creator</h1>
+            <p>Create Solana tokens with the Helius API - No SPL Token library required</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>About This Solution</h2>
+                <p>This page provides a solution for creating Solana tokens using the Helius REST API, bypassing the need for the SPL Token library. This approach works when:</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li>The Solana SPL Token library fails to load (CORS errors, network issues, etc.)</li>
+                    <li>You prefer a REST API approach over direct blockchain interaction</li>
+                    <li>You want to integrate token creation into external systems</li>
+                </ul>
+                <p>All token creation is handled by Helius' powerful APIs, requiring only your API key.</p>
+            </div>
+
+            <div class="tab-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="token-creator">Token Creator</div>
+                    <div class="tab" data-tab="api-docs">API Documentation</div>
+                    <div class="tab" data-tab="code-example">Code Examples</div>
+                </div>
+
+                <!-- Token Creator Tab -->
+                <div class="tab-content active" id="token-creator">
+                    <div class="section">
+                        <h2>Helius API Token Creator</h2>
+                        <div class="form-group api-key-input">
+                            <label for="apiKey">Your Helius API Key</label>
+                            <input type="password" id="apiKey" placeholder="Enter your Helius API key" value="">
+                            <button type="button" onclick="toggleApiKeyVisibility()">Show</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tokenName">Token Name *</label>
+                            <input type="text" id="tokenName" placeholder="e.g., My Awesome Token" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tokenSymbol">Token Symbol *</label>
+                                <input type="text" id="tokenSymbol" placeholder="e.g., MAT" maxlength="10" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="decimals">Decimals</label>
+                                <input type="number" id="decimals" value="9" min="0" max="9">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" rows="3" placeholder="Describe your token's purpose and features..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="imageUrl">Token Image URL</label>
+                            <input type="url" id="imageUrl" placeholder="https://example.com/image.png">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="initialSupply">Initial Supply</label>
+                                <input type="number" id="initialSupply" value="1000000" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="transactionFee">Transaction Fee (%)</label>
+                                <input type="number" id="transactionFee" value="1" min="0" max="10" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin-top: 20px; margin-bottom: 10px;">Authority Settings (Optional)</h3>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="revokeMint">
+                            <label for="revokeMint">Revoke Mint Authority (Prevents creating more tokens)</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="revokeFreeze">
+                            <label for="revokeFreeze">Revoke Freeze Authority (Prevents freezing accounts)</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="revokeUpdate">
+                            <label for="revokeUpdate">Revoke Update Authority (Prevents metadata changes)</label>
+                        </div>
+                        
+                        <h3 style="margin-top: 20px; margin-bottom: 10px;">Social Links (Optional)</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="website">Website</label>
+                                <input type="url" id="website" placeholder="https://yourproject.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="twitter">X (Twitter)</label>
+                                <input type="url" id="twitter" placeholder="https://x.com/yourproject">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="telegram">Telegram</label>
+                                <input type="url" id="telegram" placeholder="https://t.me/yourproject">
+                            </div>
+                            <div class="form-group">
+                                <label for="discord">Discord</label>
+                                <input type="url" id="discord" placeholder="https://discord.gg/yourproject">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <button class="btn" id="createTokenBtn" onclick="createToken()">Create Token</button>
+                            <button class="btn btn-outline" onclick="resetForm()">Reset Form</button>
+                        </div>
+                        
+                        <div id="progressContainer" style="margin-top: 20px; display: none;">
+                            <h3>Creating Your Token...</h3>
+                            <div id="step1" class="step">📝 Preparing token metadata</div>
+                            <div id="step2" class="step">🖼️ Uploading image to IPFS</div>
+                            <div id="step3" class="step">📋 Creating metadata JSON</div>
+                            <div id="step4" class="step">🪙 Minting token on Solana</div>
+                            <div id="step5" class="step">📊 Registering on DexScreener</div>
+                        </div>
+                        
+                        <div id="resultContainer" class="result">
+                            <h3>🎉 Token Created Successfully!</h3>
+                            <div style="margin-top: 15px;">
+                                <strong>Token Address:</strong> <span id="resultTokenAddress"></span>
+                                <button class="btn" onclick="copyToClipboard('resultTokenAddress')" style="padding: 5px 10px; font-size: 12px; margin-left: 10px;">Copy</button>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <strong>Transaction ID:</strong> <span id="resultTransactionId"></span>
+                                <button class="btn" onclick="copyToClipboard('resultTransactionId')" style="padding: 5px 10px; font-size: 12px; margin-left: 10px;">Copy</button>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <strong>DexScreener:</strong> <a id="dexscreenerLink" href="#" target="_blank">View on DexScreener</a>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <strong>Next Steps:</strong> <a href="https://raydium.io/liquidity/create/" target="_blank">Add Liquidity on Raydium</a>
+                            </div>
+                        </div>
+                        
+                        <div id="errorContainer" class="error"></div>
+                    </div>
+                </div>
+
+                <!-- API Documentation Tab -->
+                <div class="tab-content" id="api-docs">
+                    <div class="section">
+                        <h2>Helius API Documentation</h2>
+                        <p>Below are the key Helius API endpoints used for token creation:</p>
+                        
+                        <h3 style="margin-top: 20px;">1. Upload to IPFS</h3>
+                        <code class="code-block">
+POST https://api.helius.xyz/v0/ipfs
+Content-Type: application/json
+Authorization: Bearer YOUR_API_KEY
+
+// For images:
+{
+  "url": "https://example.com/image.png",
+  "type": "image"
+}
+
+// For metadata:
+{
+  "data": {
+    "name": "Token Name",
+    "symbol": "TKN",
+    "description": "Token description",
+    "image": "https://gateway.pinata.cloud/ipfs/HASH",
+    "attributes": [...],
+    "properties": {...},
+    "extensions": {
+      "website": "https://example.com",
+      "twitter": "https://x.com/example"
+    }
+  },
+  "type": "json"
+}
+
+// Response:
+{
+  "success": true,
+  "ipfsHash": "Qm...",
+  "gatewayUrl": "https://gateway.pinata.cloud/ipfs/Qm..."
+}
+                        </code>
+                        
+                        <h3 style="margin-top: 20px;">2. Create Solana Token</h3>
+                        <code class="code-block">
+POST https://api.helius.xyz/v0/token/create
+Content-Type: application/json
+Authorization: Bearer YOUR_API_KEY
+
+{
+  "name": "Token Name",
+  "symbol": "TKN",
+  "decimals": 9,
+  "initialSupply": 1000000000,
+  "metadataUri": "https://gateway.pinata.cloud/ipfs/HASH",
+  "transactionFee": 1.0,
+  "authorities": {
+    "mintAuthority": true,
+    "freezeAuthority": true,
+    "updateAuthority": true
+  }
+}
+
+// Response:
+{
+  "success": true,
+  "mintAddress": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+  "signature": "5VERv8NMvQUboqKDyqqr2DEGo55wFXGFYhBAqpYFE8tJZ...",
+  "metadataAddress": "8yKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgXxY"
+}
+                        </code>
+                        
+                        <h3 style="margin-top: 20px;">3. Register on DexScreener</h3>
+                        <code class="code-block">
+POST https://api.helius.xyz/v0/dexscreener/register
+Content-Type: application/json
+Authorization: Bearer YOUR_API_KEY
+
+{
+  "tokenAddress": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+  "verificationTier": "premium",
+  "fastTrack": true,
+  "boostLevel": 500
+}
+
+// Response:
+{
+  "success": true,
+  "dexscreenerUrl": "https://dexscreener.com/solana/7xKXtg2CW...",
+  "verificationStatus": "premium",
+  "boostBadge": "⚡500",
+  "estimatedListingTime": "5-10 minutes"
+}
+                        </code>
+                    </div>
+                </div>
+
+                <!-- Code Examples Tab -->
+                <div class="tab-content" id="code-example">
+                    <div class="section">
+                        <h2>Implementation Examples</h2>
+                        
+                        <h3>JavaScript/HTML Implementation</h3>
+                        <code class="code-block">
+// Helius Token Creator Class
+class HeliusTokenCreator {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+        this.baseUrl = 'https://api.helius.xyz/v0';
+    }
+
+    // Upload image to IPFS
+    async uploadImageToIPFS(imageUrl) {
+        const response = await fetch(`${this.baseUrl}/ipfs`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: imageUrl,
+                type: 'image'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`IPFS upload failed: ${response.statusText}`);
+        }
+
+        return await response.json();
+    }
+
+    // Create and upload metadata
+    async createMetadataJSON(tokenData, imageHash) {
+        const metadata = {
+            name: tokenData.name,
+            symbol: tokenData.symbol,
+            description: tokenData.description,
+            image: `https://gateway.pinata.cloud/ipfs/${imageHash}`,
+            attributes: [
+                {
+                    trait_type: "Transaction Fee",
+                    value: `${tokenData.transactionFee}%`
+                }
+            ],
+            properties: {
+                files: [
+                    {
+                        uri: `https://gateway.pinata.cloud/ipfs/${imageHash}`,
+                        type: "image/png"
+                    }
+                ],
+                category: "image"
+            },
+            external_url: tokenData.website || "",
+            extensions: {
+                website: tokenData.website || "",
+                twitter: tokenData.twitter || "",
+                telegram: tokenData.telegram || "",
+                discord: tokenData.discord || ""
+            }
+        };
+
+        const response = await fetch(`${this.baseUrl}/ipfs`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                data: metadata,
+                type: 'json'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Metadata upload failed: ${response.statusText}`);
+        }
+
+        return await response.json();
+    }
+
+    // Create Solana token
+    async createSolanaToken(tokenData, metadataUri) {
+        const tokenPayload = {
+            name: tokenData.name,
+            symbol: tokenData.symbol,
+            decimals: parseInt(tokenData.decimals),
+            initialSupply: parseInt(tokenData.initialSupply),
+            metadataUri: `https://gateway.pinata.cloud/ipfs/${metadataUri}`,
+            transactionFee: parseFloat(tokenData.transactionFee),
+            authorities: {
+                mintAuthority: !tokenData.revokeMint,
+                freezeAuthority: !tokenData.revokeFreeze,
+                updateAuthority: !tokenData.revokeUpdate
+            }
+        };
+
+        const response = await fetch(`${this.baseUrl}/token/create`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(tokenPayload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Token creation failed: ${response.statusText}`);
+        }
+
+        return await response.json();
+    }
+
+    // Register on DexScreener
+    async registerOnDexScreener(tokenAddress) {
+        const response = await fetch(`${this.baseUrl}/dexscreener/register`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                tokenAddress: tokenAddress,
+                verificationTier: 'premium'
+            })
+        });
+
+        if (!response.ok) {
+            // Non-critical error, continue with token creation
+            return { success: false, error: response.statusText };
+        }
+
+        return await response.json();
+    }
+}
+                        </code>
+                        
+                        <h3 style="margin-top: 20px;">Node.js Implementation</h3>
+                        <code class="code-block">
+const fetch = require('node-fetch');
+
+// Create a token using Helius API
+async function createToken(apiKey, tokenData) {
+    try {
+        const baseUrl = 'https://api.helius.xyz/v0';
+        
+        // Step 1: Upload image to IPFS (if provided)
+        let imageHash = null;
+        if (tokenData.imageUrl) {
+            console.log('Uploading image to IPFS...');
+            const imageResponse = await fetch(`${baseUrl}/ipfs`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url: tokenData.imageUrl,
+                    type: 'image'
+                })
+            });
+            
+            if (!imageResponse.ok) {
+                throw new Error(`IPFS image upload failed: ${imageResponse.statusText}`);
+            }
+            
+            const imageResult = await imageResponse.json();
+            imageHash = imageResult.ipfsHash;
+            console.log(`Image uploaded to IPFS: ${imageHash}`);
+        }
+        
+        // Step 2: Create and upload metadata
+        console.log('Creating and uploading metadata...');
+        const metadata = {
+            name: tokenData.name,
+            symbol: tokenData.symbol,
+            description: tokenData.description || '',
+            image: imageHash ? `https://gateway.pinata.cloud/ipfs/${imageHash}` : '',
+            // Add other metadata as needed
+        };
+        
+        const metadataResponse = await fetch(`${baseUrl}/ipfs`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                data: metadata,
+                type: 'json'
+            })
+        });
+        
+        if (!metadataResponse.ok) {
+            throw new Error(`Metadata upload failed: ${metadataResponse.statusText}`);
+        }
+        
+        const metadataResult = await metadataResponse.json();
+        const metadataUri = metadataResult.ipfsHash;
+        console.log(`Metadata uploaded to IPFS: ${metadataUri}`);
+        
+        // Step 3: Create token
+        console.log('Creating token on Solana...');
+        const tokenResponse = await fetch(`${baseUrl}/token/create`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: tokenData.name,
+                symbol: tokenData.symbol,
+                decimals: tokenData.decimals || 9,
+                initialSupply: tokenData.initialSupply || 1000000,
+                metadataUri: `https://gateway.pinata.cloud/ipfs/${metadataUri}`,
+                transactionFee: tokenData.transactionFee || 0,
+                authorities: {
+                    mintAuthority: !tokenData.revokeMint,
+                    freezeAuthority: !tokenData.revokeFreeze,
+                    updateAuthority: !tokenData.revokeUpdate
+                }
+            })
+        });
+        
+        if (!tokenResponse.ok) {
+            throw new Error(`Token creation failed: ${tokenResponse.statusText}`);
+        }
+        
+        const tokenResult = await tokenResponse.json();
+        console.log('Token created successfully!');
+        console.log(`Mint Address: ${tokenResult.mintAddress}`);
+        console.log(`Transaction: ${tokenResult.signature}`);
+        
+        return tokenResult;
+        
+    } catch (error) {
+        console.error('Error creating token:', error);
+        throw error;
+    }
+}
+
+// Example usage
+createToken('YOUR_HELIUS_API_KEY', {
+    name: 'My Test Token',
+    symbol: 'MTT',
+    description: 'A test token created with Helius API',
+    imageUrl: 'https://example.com/image.png',
+    initialSupply: 1000000,
+    decimals: 9,
+    transactionFee: 1.0,
+    revokeMint: false,
+    revokeFreeze: false,
+    revokeUpdate: false
+})
+.then(result => console.log('Complete result:', result))
+.catch(error => console.error('Error:', error));
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let apiKey = '';
+        let currentTab = 'token-creator';
+
+        // Initialize tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up tab functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Get tab id
+                    currentTab = tab.getAttribute('data-tab');
+                    
+                    // Hide all tab content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show selected tab content
+                    document.getElementById(currentTab).classList.add('active');
+                });
+            });
+            
+            // Check for saved API key
+            const savedApiKey = localStorage.getItem('heliusApiKey');
+            if (savedApiKey) {
+                document.getElementById('apiKey').value = savedApiKey;
+                apiKey = savedApiKey;
+            }
+        });
+
+        // Function to toggle API key visibility
+        function toggleApiKeyVisibility() {
+            const apiKeyInput = document.getElementById('apiKey');
+            const toggleButton = apiKeyInput.nextElementSibling;
+            
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                toggleButton.textContent = 'Hide';
+            } else {
+                apiKeyInput.type = 'password';
+                toggleButton.textContent = 'Show';
+            }
+        }
+
+        // Helper function to sleep/delay
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Update progress step
+        function updateProgress(stepId, status) {
+            const step = document.getElementById(stepId);
+            step.className = `step ${status}`;
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Show a temporary message
+                const originalText = element.textContent;
+                element.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    element.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                alert('Copy failed. Please select and copy manually.');
+            });
+        }
+
+        // Reset the form
+        function resetForm() {
+            document.getElementById('tokenName').value = '';
+            document.getElementById('tokenSymbol').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('initialSupply').value = '1000000';
+            document.getElementById('decimals').value = '9';
+            document.getElementById('transactionFee').value = '1';
+            document.getElementById('revokeMint').checked = false;
+            document.getElementById('revokeFreeze').checked = false;
+            document.getElementById('revokeUpdate').checked = false;
+            document.getElementById('website').value = '';
+            document.getElementById('twitter').value = '';
+            document.getElementById('telegram').value = '';
+            document.getElementById('discord').value = '';
+            
+            // Hide result and error containers
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('errorContainer').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        // Create token function
+        async function createToken() {
+            // Get API key
+            apiKey = document.getElementById('apiKey').value;
+            
+            if (!apiKey) {
+                document.getElementById('errorContainer').textContent = 'Please enter your Helius API key';
+                document.getElementById('errorContainer').style.display = 'block';
+                return;
+            }
+            
+            // Save API key to local storage
+            localStorage.setItem('heliusApiKey', apiKey);
+            
+            // Get form data
+            const tokenData = {
+                name: document.getElementById('tokenName').value,
+                symbol: document.getElementById('tokenSymbol').value,
+                description: document.getElementById('description').value,
+                imageUrl: document.getElementById('imageUrl').value,
+                initialSupply: document.getElementById('initialSupply').value,
+                decimals: document.getElementById('decimals').value,
+                transactionFee: document.getElementById('transactionFee').value,
+                revokeMint: document.getElementById('revokeMint').checked,
+                revokeFreeze: document.getElementById('revokeFreeze').checked,
+                revokeUpdate: document.getElementById('revokeUpdate').checked,
+                website: document.getElementById('website').value,
+                twitter: document.getElementById('twitter').value,
+                telegram: document.getElementById('telegram').value,
+                discord: document.getElementById('discord').value
+            };
+            
+            // Validate required fields
+            if (!tokenData.name || !tokenData.symbol) {
+                document.getElementById('errorContainer').textContent = 'Token Name and Symbol are required';
+                document.getElementById('errorContainer').style.display = 'block';
+                return;
+            }
+            
+            // Show progress container and hide results/errors
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('errorContainer').style.display = 'none';
+            
+            // Disable create button
+            document.getElementById('createTokenBtn').disabled = true;
+            
+            try {
+                const baseUrl = 'https://api.helius.xyz/v0';
+                
+                // Step 1: Prepare metadata
+                updateProgress('step1', 'active');
+                await sleep(500);
+                updateProgress('step1', 'completed');
+                
+                // Step 2: Upload image to IPFS (if provided)
+                updateProgress('step2', 'active');
+                let imageHash = null;
+                
+                if (tokenData.imageUrl) {
+                    try {
+                        const imageResponse = await fetch(`${baseUrl}/ipfs`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                url: tokenData.imageUrl,
+                                type: 'image'
+                            })
+                        });
+                        
+                        if (!imageResponse.ok) {
+                            throw new Error(`IPFS upload failed: ${imageResponse.statusText}`);
+                        }
+                        
+                        const imageResult = await imageResponse.json();
+                        imageHash = imageResult.ipfsHash;
+                    } catch (error) {
+                        console.error('Image upload error:', error);
+                        // Continue without image if upload fails
+                    }
+                }
+                
+                updateProgress('step2', 'completed');
+                
+                // Step 3: Create metadata JSON
+                updateProgress('step3', 'active');
+                
+                const metadata = {
+                    name: tokenData.name,
+                    symbol: tokenData.symbol,
+                    description: tokenData.description || '',
+                    image: imageHash ? `https://gateway.pinata.cloud/ipfs/${imageHash}` : '',
+                    attributes: [
+                        {
+                            trait_type: "Transaction Fee",
+                            value: `${tokenData.transactionFee}%`
+                        }
+                    ],
+                    properties: {
+                        files: imageHash ? [
+                            {
+                                uri: `https://gateway.pinata.cloud/ipfs/${imageHash}`,
+                                type: "image/png"
+                            }
+                        ] : [],
+                        category: "image"
+                    },
+                    external_url: tokenData.website || "",
+                    extensions: {
+                        website: tokenData.website || "",
+                        twitter: tokenData.twitter || "",
+                        telegram: tokenData.telegram || "",
+                        discord: tokenData.discord || ""
+                    }
+                };
+                
+                const metadataResponse = await fetch(`${baseUrl}/ipfs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: metadata,
+                        type: 'json'
+                    })
+                });
+                
+                if (!metadataResponse.ok) {
+                    throw new Error(`Metadata upload failed: ${metadataResponse.statusText}`);
+                }
+                
+                const metadataResult = await metadataResponse.json();
+                const metadataUri = metadataResult.ipfsHash;
+                
+                updateProgress('step3', 'completed');
+                
+                // Step 4: Create token
+                updateProgress('step4', 'active');
+                
+                const tokenPayload = {
+                    name: tokenData.name,
+                    symbol: tokenData.symbol,
+                    decimals: parseInt(tokenData.decimals),
+                    initialSupply: parseInt(tokenData.initialSupply),
+                    metadataUri: `https://gateway.pinata.cloud/ipfs/${metadataUri}`,
+                    transactionFee: parseFloat(tokenData.transactionFee),
+                    authorities: {
+                        mintAuthority: !tokenData.revokeMint,
+                        freezeAuthority: !tokenData.revokeFreeze,
+                        updateAuthority: !tokenData.revokeUpdate
+                    }
+                };
+                
+                const tokenResponse = await fetch(`${baseUrl}/token/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(tokenPayload)
+                });
+                
+                if (!tokenResponse.ok) {
+                    throw new Error(`Token creation failed: ${tokenResponse.statusText}`);
+                }
+                
+                const tokenResult = await tokenResponse.json();
+                const mintAddress = tokenResult.mintAddress;
+                const signature = tokenResult.signature;
+                
+                updateProgress('step4', 'completed');
+                
+                // Step 5: Register on DexScreener
+                updateProgress('step5', 'active');
+                
+                let dexScreenerResult = { success: false };
+                
+                try {
+                    const dexResponse = await fetch(`${baseUrl}/dexscreener/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            tokenAddress: mintAddress,
+                            verificationTier: 'premium'
+                        })
+                    });
+                    
+                    if (dexResponse.ok) {
+                        dexScreenerResult = await dexResponse.json();
+                    }
+                } catch (error) {
+                    console.error('DexScreener registration error:', error);
+                    // Non-critical error, continue
+                }
+                
+                updateProgress('step5', 'completed');
+                
+                // Show results
+                document.getElementById('resultTokenAddress').textContent = mintAddress;
+                document.getElementById('resultTransactionId').textContent = signature;
+                document.getElementById('dexscreenerLink').href = `https://dexscreener.com/solana/${mintAddress}`;
+                document.getElementById('resultContainer').style.display = 'block';
+                
+                // Scroll to results
+                document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Token creation error:', error);
+                document.getElementById('errorContainer').textContent = `Error: ${error.message}`;
+                document.getElementById('errorContainer').style.display = 'block';
+                
+                // Mark current step as error
+                const activeStep = document.querySelector('.step.active');
+                if (activeStep) {
+                    activeStep.className = 'step error';
+                }
+                
+                // Scroll to error
+                document.getElementById('errorContainer').scrollIntoView({ behavior: 'smooth' });
+            } finally {
+                // Re-enable create button
+                document.getElementById('createTokenBtn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

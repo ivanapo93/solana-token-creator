@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana SPL Token Creator - Mainnet</title>
+    <style>
+        :root {
+            --color-primary: #000000;
+            --color-secondary: #ffffff;
+            --color-text: #000000;
+            --color-background: #ffffff;
+            --color-border: #e5e5e5;
+            --color-success: #16a34a;
+            --color-error: #dc2626;
+            --color-warning: #ca8a04;
+            --color-solana: #14F195;
+            --color-solana-dark: #9945FF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #666;
+        }
+
+        .mainnet-badge {
+            display: inline-block;
+            background-color: var(--color-solana);
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .form-section {
+            background: var(--color-background);
+            border: 2px solid var(--color-border);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-section h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--color-border);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 0.75rem;
+            border: 2px dashed var(--color-border);
+            border-radius: 0.375rem;
+            text-align: center;
+            background: #f9f9f9;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover .file-upload-label {
+            border-color: var(--color-primary);
+            background: #f0f0f0;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 0.5rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .checkbox-group {
+            margin: 1rem 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        .button {
+            background: var(--color-primary);
+            color: var(--color-secondary);
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .button:hover {
+            background: #333;
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .wallet-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .wallet-connect-button {
+            background: var(--color-solana-dark);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wallet-connect-button:hover {
+            background: #8040d8;
+        }
+
+        .wallet-info {
+            background: #f9f9f9;
+            border: 1px solid var(--color-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 0.875rem;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+            color: #15803d;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+
+        .status-warning {
+            background: #fefce8;
+            border: 1px solid #ca8a04;
+            color: #a16207;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--color-primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            background: #f9f9f9;
+            border: 1px solid var(--color-border);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-section h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .result-item {
+            margin-bottom: 1rem;
+            word-break: break-all;
+        }
+
+        .result-item strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .copy-button {
+            background: #f3f4f6;
+            border: 1px solid var(--color-border);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        .metadata-link {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--color-solana-dark);
+            text-decoration: none;
+        }
+
+        .metadata-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .solana-logo {
+            width: 150px;
+            margin-bottom: 1rem;
+        }
+
+        .token-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f9f9f9;
+            border-radius: 0.5rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .token-info h3 {
+            margin-bottom: 1rem;
+        }
+
+        .token-info p {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .token-info strong {
+            font-weight: 600;
+        }
+
+        .network-disclaimer {
+            background: #fff8e1;
+            border: 1px solid #ffecb3;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .collapsible-section {
+            border: 1px solid var(--color-border);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 1rem;
+            background: #f9f9f9;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .collapsible-content {
+            padding: 1rem;
+            display: none;
+        }
+
+        .collapsible-header:after {
+            content: '▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible-header.active:after {
+            content: '▲';
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="mainnet-badge">MAINNET</div>
+            <h1>Solana SPL Token Creator</h1>
+            <p>Create SPL tokens on Solana mainnet with metadata and authority management</p>
+        </div>
+
+        <!-- Network Disclaimer -->
+        <div class="network-disclaimer">
+            <strong>⚠️ Mainnet Warning:</strong> You are creating a real Solana token on the mainnet. This requires SOL to pay for transaction fees and is irreversible. Make sure your wallet has sufficient SOL balance.
+        </div>
+
+        <!-- Wallet Connection Section -->
+        <div class="wallet-section">
+            <div id="walletInfo" class="wallet-info" style="display: none;">
+                <strong>Connected Wallet:</strong>
+                <div id="walletAddress" class="wallet-address"></div>
+                <div id="walletBalance"></div>
+            </div>
+            <button id="connectWallet" class="wallet-connect-button">Connect Phantom Wallet</button>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message"></div>
+        
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <div>Creating your token on Solana mainnet...</div>
+        </div>
+
+        <!-- Token Creation Form -->
+        <div class="form-section">
+            <h2>Token Details</h2>
+            
+            <form id="tokenForm">
+                <!-- Basic Information -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tokenName">Token Name *</label>
+                        <input type="text" id="tokenName" name="tokenName" required placeholder="e.g., My Awesome Token">
+                    </div>
+                    <div class="form-group">
+                        <label for="tokenSymbol">Token Symbol *</label>
+                        <input type="text" id="tokenSymbol" name="tokenSymbol" required placeholder="e.g., MAT" maxlength="10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <textarea id="description" name="description" placeholder="Describe your token..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="initialSupply">Initial Supply *</label>
+                        <input type="number" id="initialSupply" name="initialSupply" required value="1000000000" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="decimals">Decimals *</label>
+                        <input type="number" id="decimals" name="decimals" required value="9" min="0" max="9">
+                    </div>
+                </div>
+
+                <!-- Collapsible Social Links Section -->
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                        Social Links (Optional)
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="form-group">
+                            <label for="website">Website URL</label>
+                            <input type="url" id="website" name="website" placeholder="https://yourwebsite.com">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="twitter">Twitter URL</label>
+                                <input type="url" id="twitter" name="twitter" placeholder="https://twitter.com/yourusername">
+                            </div>
+                            <div class="form-group">
+                                <label for="telegram">Telegram URL</label>
+                                <input type="url" id="telegram" name="telegram" placeholder="https://t.me/yourgroup">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="discord">Discord URL</label>
+                            <input type="url" id="discord" name="discord" placeholder="https://discord.gg/yourinvite">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Token Image -->
+                <div class="form-group">
+                    <label for="tokenImage">Token Image (Optional)</label>
+                    <div class="file-upload">
+                        <input type="file" id="tokenImage" name="tokenImage" accept="image/*">
+                        <label for="tokenImage" class="file-upload-label">
+                            Click to upload or drag and drop<br>
+                            <small>PNG, JPG, GIF up to 5MB</small>
+                        </label>
+                    </div>
+                    <div id="imagePreview" class="image-preview" style="display: none;"></div>
+                </div>
+
+                <!-- Authority Management -->
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                        Authority Settings
+                    </div>
+                    <div class="collapsible-content">
+                        <p style="margin-bottom: 1rem;">These settings control who can manage the token after creation.</p>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="revokeMint" name="revokeMint">
+                                <label for="revokeMint">Revoke Mint Authority (prevents creating more tokens)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="revokeFreeze" name="revokeFreeze">
+                                <label for="revokeFreeze">Revoke Freeze Authority (prevents freezing token accounts)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="revokeUpdate" name="revokeUpdate">
+                                <label for="revokeUpdate">Revoke Update Authority (prevents metadata updates)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="token-info">
+                    <h3>Token Information</h3>
+                    <p><strong>Network:</strong> Solana Mainnet</p>
+                    <p><strong>Estimated Cost:</strong> ~0.01 SOL for transactions</p>
+                    <p><strong>Processing Time:</strong> ~30 seconds depending on network conditions</p>
+                </div>
+
+                <button type="submit" id="createTokenBtn" class="button" disabled>Create SPL Token</button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultSection" class="result-section">
+            <h2>Token Created Successfully! 🎉</h2>
+            <div class="result-item">
+                <strong>Mint Address:</strong>
+                <span id="mintAddress"></span>
+                <button class="copy-button" onclick="copyToClipboard('mintAddress')">Copy</button>
+            </div>
+            <div class="result-item">
+                <strong>Transaction Signature:</strong>
+                <span id="transactionSignature"></span>
+                <button class="copy-button" onclick="copyToClipboard('transactionSignature')">Copy</button>
+                <a id="explorerLink" href="#" target="_blank" class="metadata-link">View on Solana Explorer</a>
+            </div>
+            <div class="result-item">
+                <strong>Metadata:</strong>
+                <span id="metadataInfo"></span>
+                <a id="metadataLink" href="#" target="_blank" class="metadata-link" style="display: none;">View Metadata</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buffer Polyfill for Browser Compatibility -->
+    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.js"></script>
+    <script>
+        // Ensure Buffer is available globally
+        if (typeof window !== 'undefined') {
+            window.Buffer = window.Buffer || buffer.Buffer;
+        }
+    </script>
+
+    <!-- Solana Web3.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.4/lib/index.iife.min.js"></script>
+    
+    <!-- SPL Token Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.13/lib/index.iife.min.js"></script>
+
+    <script>
+        // Global variables
+        let wallet = null;
+        let connection = null;
+        const MAINNET_RPC_URL = 'https://solana-mainnet.g.alchemy.com/v2/PVF7BjfV8uajJQcxoAN0D';
+        
+        // IPFS configuration for NFT.Storage
+        const NFT_STORAGE_KEY = 'YOUR_NFT_STORAGE_KEY'; // Replace with your actual key
+        const NFT_STORAGE_ENDPOINT = 'https://api.nft.storage/upload';
+
+        // Initialize connection to Solana mainnet
+        const initializeConnection = () => {
+            try {
+                connection = new solanaWeb3.Connection(
+                    MAINNET_RPC_URL,
+                    'confirmed'
+                );
+                console.log('Connected to Solana mainnet');
+            } catch (error) {
+                console.error('Failed to connect to Solana:', error);
+                showStatus('Failed to connect to Solana network', 'error');
+            }
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeConnection();
+            setupEventListeners();
+            checkWalletConnection();
+        });
+
+        // Setup event listeners
+        const setupEventListeners = () => {
+            document.getElementById('connectWallet').addEventListener('click', connectWallet);
+            document.getElementById('tokenForm').addEventListener('submit', handleTokenCreation);
+            document.getElementById('tokenImage').addEventListener('change', handleImagePreview);
+            
+            // Enable/disable create button based on wallet connection
+            const updateCreateButton = () => {
+                const createBtn = document.getElementById('createTokenBtn');
+                createBtn.disabled = !wallet;
+            };
+            
+            // Check wallet periodically
+            setInterval(checkWalletConnection, 1000);
+        };
+
+        // Toggle collapsible sections
+        function toggleCollapsible(element) {
+            element.classList.toggle('active');
+            const content = element.nextElementSibling;
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Check if wallet is already connected
+        const checkWalletConnection = async () => {
+            try {
+                if (window.solana && window.solana.isPhantom) {
+                    const response = await window.solana.connect({ onlyIfTrusted: true });
+                    if (response.publicKey) {
+                        wallet = window.solana;
+                        await updateWalletInfo();
+                        document.getElementById('createTokenBtn').disabled = false;
+                    }
+                }
+            } catch (error) {
+                // Silent fail for auto-connection
+            }
+        };
+
+        // Connect to Phantom wallet
+        const connectWallet = async () => {
+            try {
+                if (!window.solana || !window.solana.isPhantom) {
+                    showStatus('Please install Phantom wallet extension', 'error');
+                    return;
+                }
+
+                const response = await window.solana.connect();
+                wallet = window.solana;
+                await updateWalletInfo();
+                document.getElementById('createTokenBtn').disabled = false;
+                showStatus('Wallet connected successfully!', 'success');
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                showStatus('Failed to connect wallet: ' + (error.message || 'Unknown error'), 'error');
+            }
+        };
+
+        // Update wallet information display
+        const updateWalletInfo = async () => {
+            if (!wallet || !connection) return;
+
+            try {
+                const balance = await connection.getBalance(wallet.publicKey);
+                const solBalance = (balance / solanaWeb3.LAMPORTS_PER_SOL).toFixed(4);
+
+                document.getElementById('walletAddress').textContent = wallet.publicKey.toString();
+                document.getElementById('walletBalance').textContent = `Balance: ${solBalance} SOL`;
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('connectWallet').textContent = 'Connected';
+                document.getElementById('connectWallet').disabled = true;
+            } catch (error) {
+                console.error('Failed to fetch wallet info:', error);
+            }
+        };
+
+        // Handle image preview
+        const handleImagePreview = (event) => {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Token preview">`;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        };
+
+        // Upload to NFT.Storage
+        const uploadToNFTStorage = async (file) => {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(NFT_STORAGE_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${NFT_STORAGE_KEY}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`NFT.Storage upload failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                return `https://ipfs.io/ipfs/${result.value.cid}`;
+            } catch (error) {
+                console.error('NFT.Storage upload failed:', error);
+                throw error;
+            }
+        };
+
+        // Create token metadata and upload to IPFS
+        const createAndUploadMetadata = async (tokenData, imageUri) => {
+            try {
+                // Create metadata object
+                const metadata = {
+                    name: tokenData.name,
+                    symbol: tokenData.symbol,
+                    description: tokenData.description || '',
+                    image: imageUri || '',
+                    attributes: [],
+                    properties: {
+                        files: imageUri ? [{ uri: imageUri, type: "image/png" }] : [],
+                        category: "image",
+                        creators: []
+                    }
+                };
+
+                // Add social links if provided
+                if (tokenData.website || tokenData.twitter || tokenData.telegram || tokenData.discord) {
+                    metadata.external_url = tokenData.website || '';
+                    metadata.twitter_url = tokenData.twitter || '';
+                    metadata.telegram_url = tokenData.telegram || '';
+                    metadata.discord_url = tokenData.discord || '';
+                }
+
+                // Convert metadata to file
+                const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
+                const metadataFile = new File([metadataBlob], 'metadata.json', { type: 'application/json' });
+
+                // Upload metadata to NFT.Storage
+                return await uploadToNFTStorage(metadataFile);
+            } catch (error) {
+                console.error('Metadata creation failed:', error);
+                throw error;
+            }
+        };
+
+        // Main token creation handler
+        const handleTokenCreation = async (event) => {
+            event.preventDefault();
+            
+            if (!wallet) {
+                showStatus('Please connect your wallet first', 'error');
+                return;
+            }
+
+            showLoading(true);
+            showStatus('Creating your SPL token...', 'warning');
+
+            try {
+                // Get form data
+                const formData = new FormData(event.target);
+                const tokenData = {
+                    name: formData.get('tokenName'),
+                    symbol: formData.get('tokenSymbol'),
+                    description: formData.get('description'),
+                    initialSupply: parseInt(formData.get('initialSupply')),
+                    decimals: parseInt(formData.get('decimals')),
+                    website: formData.get('website'),
+                    twitter: formData.get('twitter'),
+                    telegram: formData.get('telegram'),
+                    discord: formData.get('discord'),
+                    revokeMint: formData.get('revokeMint') === 'on',
+                    revokeFreeze: formData.get('revokeFreeze') === 'on',
+                    revokeUpdate: formData.get('revokeUpdate') === 'on'
+                };
+
+                // Upload image to IPFS if provided
+                let imageUri = null;
+                const imageFile = document.getElementById('tokenImage').files[0];
+                if (imageFile) {
+                    showStatus('Uploading image to IPFS...', 'warning');
+                    imageUri = await uploadToNFTStorage(imageFile);
+                }
+
+                // Create and upload metadata
+                let metadataUri = null;
+                if (tokenData.name || tokenData.description || imageUri || 
+                    tokenData.website || tokenData.twitter || tokenData.telegram || tokenData.discord) {
+                    showStatus('Creating metadata...', 'warning');
+                    metadataUri = await createAndUploadMetadata(tokenData, imageUri);
+                }
+
+                // Create the SPL token
+                showStatus('Creating SPL token on Solana mainnet...', 'warning');
+                
+                // Generate new mint keypair
+                const mintKeypair = solanaWeb3.Keypair.generate();
+
+                // Create mint account
+                const createMintTx = await splToken.createMint(
+                    connection,
+                    {
+                        publicKey: wallet.publicKey,
+                        signTransaction: wallet.signTransaction.bind(wallet),
+                        signAllTransactions: wallet.signAllTransactions.bind(wallet)
+                    },
+                    wallet.publicKey, // mint authority
+                    wallet.publicKey, // freeze authority
+                    tokenData.decimals,
+                    mintKeypair
+                );
+
+                console.log('Mint created with tx:', createMintTx);
+
+                // Get or create associated token account
+                const tokenAccount = await splToken.getOrCreateAssociatedTokenAccount(
+                    connection,
+                    {
+                        publicKey: wallet.publicKey,
+                        signTransaction: wallet.signTransaction.bind(wallet),
+                        signAllTransactions: wallet.signAllTransactions.bind(wallet)
+                    },
+                    mintKeypair.publicKey,
+                    wallet.publicKey
+                );
+
+                // Mint initial supply to token account
+                const mintAmount = BigInt(tokenData.initialSupply) * BigInt(10 ** tokenData.decimals);
+                const mintToTx = await splToken.mintTo(
+                    connection,
+                    {
+                        publicKey: wallet.publicKey,
+                        signTransaction: wallet.signTransaction.bind(wallet),
+                        signAllTransactions: wallet.signAllTransactions.bind(wallet)
+                    },
+                    mintKeypair.publicKey,
+                    tokenAccount.address,
+                    wallet.publicKey,
+                    mintAmount
+                );
+
+                console.log('Tokens minted with tx:', mintToTx);
+
+                // Handle authority revocation if requested
+                const revokeSignatures = [];
+                
+                if (tokenData.revokeMint) {
+                    showStatus('Revoking mint authority...', 'warning');
+                    const revokeMintTx = await splToken.setAuthority(
+                        connection,
+                        {
+                            publicKey: wallet.publicKey,
+                            signTransaction: wallet.signTransaction.bind(wallet),
+                            signAllTransactions: wallet.signAllTransactions.bind(wallet)
+                        },
+                        mintKeypair.publicKey,
+                        wallet.publicKey,
+                        splToken.AuthorityType.MintTokens,
+                        null // Setting to null revokes the authority
+                    );
+                    revokeSignatures.push({ type: 'mint', signature: revokeMintTx });
+                }
+
+                if (tokenData.revokeFreeze) {
+                    showStatus('Revoking freeze authority...', 'warning');
+                    const revokeFreezeTx = await splToken.setAuthority(
+                        connection,
+                        {
+                            publicKey: wallet.publicKey,
+                            signTransaction: wallet.signTransaction.bind(wallet),
+                            signAllTransactions: wallet.signAllTransactions.bind(wallet)
+                        },
+                        mintKeypair.publicKey,
+                        wallet.publicKey,
+                        splToken.AuthorityType.FreezeAccount,
+                        null
+                    );
+                    revokeSignatures.push({ type: 'freeze', signature: revokeFreezeTx });
+                }
+
+                // Display results
+                displayResults({
+                    mintAddress: mintKeypair.publicKey.toString(),
+                    transactionSignature: mintToTx,
+                    metadataUri: metadataUri,
+                    revokeSignatures: revokeSignatures
+                });
+
+                showStatus('Token created successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Token creation failed:', error);
+                showStatus(`Token creation failed: ${error.message || 'Unknown error'}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // Display creation results
+        const displayResults = (results) => {
+            document.getElementById('mintAddress').textContent = results.mintAddress;
+            document.getElementById('transactionSignature').textContent = results.transactionSignature;
+            
+            // Set metadata information
+            if (results.metadataUri) {
+                document.getElementById('metadataInfo').textContent = 'Metadata uploaded to IPFS';
+                document.getElementById('metadataLink').href = results.metadataUri;
+                document.getElementById('metadataLink').style.display = 'block';
+            } else {
+                document.getElementById('metadataInfo').textContent = 'No metadata created';
+            }
+            
+            // Set explorer link
+            document.getElementById('explorerLink').href = `https://solscan.io/tx/${results.transactionSignature}`;
+            
+            // Display result section
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // Show loading state
+        const showLoading = (show) => {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('createTokenBtn').disabled = show || !wallet;
+        };
+
+        // Show status messages
+        const showStatus = (message, type) => {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        };
+
+        // Copy to clipboard utility
+        const copyToClipboard = async (elementId) => {
+            const text = document.getElementById(elementId).textContent;
+            try {
+                await navigator.clipboard.writeText(text);
+                showStatus('Copied to clipboard!', 'success');
+            } catch (error) {
+                console.error('Copy failed:', error);
+                showStatus('Failed to copy to clipboard', 'error');
+            }
+        };
+    </script>
+</body>
+</html>
