@@ -1,3 +1,5 @@
+import * as solanaWeb3 from '@solana/web3.js';
+
 /**
  * Enhanced Wallet Connector for Solana dApps
  * 
@@ -344,6 +346,11 @@ class WalletConnector {
      */
     async verifyNetwork() {
         try {
+  // some code
+} catch (error) {
+  console.error(error);
+}
+
             // If not connected, return
             if (!this.state.isConnected || !this.state.wallet) {
                 return false;
@@ -358,7 +365,9 @@ class WalletConnector {
                     await this.options.solanaInstance.verifyPhantomNetwork();
                     isCorrect = true;
                     networkName = this.options.network;
-                } catch (error) {
+                } catch {
+  // nothing here
+}
                     isCorrect = false;
                     networkName = 'unknown';
                 }

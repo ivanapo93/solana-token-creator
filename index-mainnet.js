@@ -1049,7 +1049,6 @@ async function generateFallbackLogo(tokenData) {
         height: 200
     };
 }
-}
 
 async function generateAILogo(tokenData) {
     console.log('🎨 Generating AI logo for mainnet token...');
@@ -2244,3 +2243,60 @@ console.log('🌐 Network: SOLANA MAINNET ONLY');
 console.log('💰 Real SOL transactions enabled');
 console.log('🛡️ All cached state will be cleared on password unlock');
 console.log('Development utilities: resetForm(), resetSitePassword(), checkNetworkStatus()');
+// Add this at the very end of your file
+
+// Make sure you have a button with id 'mintTokenBtn' in your HTML.
+// If you don't have it, I can help you add it too.
+
+document.getElementById('mintTokenBtn').addEventListener('click', async () => {
+  try {
+    // This is the data you send to your Supabase function
+    const dataToSend = {
+      wallet: window.solanaInstance.wallet.publicKey.toString(), // user wallet address
+      // add any other required fields here if needed
+    };
+
+    const response = await fetch('https://kseeiqbtxmvinscoarhw.supabase.co/functions/v1/dynamic-service', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSend),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    alert('Token minted successfully!');
+    console.log('Mint result:', result);
+  } catch (error) {
+    alert('Mint failed: ' + error.message);
+    console.error('Error:', error);
+  }
+});
+document.getElementById('mintTokenBtn').addEventListener('click', async () => {
+  const mintStatus = document.getElementById('mintStatus');
+  mintStatus.textContent = 'Minting token... Please wait.';
+
+  try {
+    const response = await fetch('https://kseeiqbtxmvinscoarhw.supabase.co/functions/v1/dynamic-service', {
+      method: 'POST',  // Or 'GET' depending on your function
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        // Send any data your function needs here
+        // e.g. user wallet address or token metadata
+      }),
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    mintStatus.textContent = 'Token minted successfully! ID: ' + data.tokenId;  // Adapt based on your response
+  } catch (error) {
+    mintStatus.textContent = 'Minting failed: ' + error.message;
+  }
+});

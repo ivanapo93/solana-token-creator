@@ -95,19 +95,19 @@ router.get('/detailed', async (req, res) => {
       dependencies: {
         openai: {
           configured: !!process.env.OPENAI_API_KEY,
-          status: !!process.env.OPENAI_API_KEY ? 'configured' : 'not-configured'
+          status: process.env.OPENAI_API_KEY ? 'configured' : 'not-configured'
         },
         stability: {
           configured: !!process.env.STABILITY_API_KEY,
-          status: !!process.env.STABILITY_API_KEY ? 'configured' : 'not-configured'
+          status: process.env.STABILITY_API_KEY ? 'configured' : 'not-configured'
         },
         arweave: {
           configured: !!process.env.ARWEAVE_WALLET,
-          status: !!process.env.ARWEAVE_WALLET ? 'configured' : 'not-configured'
+          status: process.env.ARWEAVE_WALLET ? 'configured' : 'not-configured'
         },
         ipfs: {
           configured: !!(process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET),
-          status: !!(process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET) ? 'configured' : 'not-configured'
+          status: process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET ? 'configured' : 'not-configured'
         }
       }
     };
@@ -297,7 +297,7 @@ router.get('/dependencies', async (req, res) => {
           },
           ipfs: {
             configured: !!(process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET),
-            status: !!(process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET) ? 'ready' : 'not-configured'
+            status: process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET ? 'ready' : 'not-configured'
           }
         },
         auth: {
