@@ -1,142 +1,71 @@
-# SolMeme Creator - Supabase Edge Functions
+# SolMeme Creator
 
-This project is a Solana token creator with AI image generation capabilities, deployed as Supabase Edge Functions.
+This project is a Solana token creator with AI image generation capabilities, deployed as a static website.
 
-## Architecture Overview
+## Features
 
-The system is architected as a set of microservices implemented as Edge Functions:
+-   **Solana Mainnet Integration:** Connect to the Solana Mainnet to create real SPL tokens.
+-   **Phantom Wallet Support:** Connect to your Phantom wallet to create and manage your tokens.
+-   **AI-Powered Token Generation:** Use AI to generate a token name, symbol, and description based on your ideas.
+-   **AI-Generated Logos:** Automatically generate a unique logo for your token using DALL-E.
+-   **IPFS/Arweave Integration:** Upload your token's logo and metadata to IPFS or Arweave for decentralized storage.
+-   **Authority Revocation:** Optionally revoke mint, freeze, and update authorities for your token.
+-   **Real-time On-chain Data:** View the number of token holders and the live price of your token.
+-   **Socials Integration:** Display your social media links on your token's page.
+-   **Tokenomics Chart:** View a tokenomics chart to see the distribution of your token.
+-   **Landing Page, About Page, and FAQ Page:** Learn more about the project and get answers to your questions.
 
-1. **mint-token**: Creates SPL tokens on Solana with optional authority revocation
-2. **generate-image**: AI-powered token logo generation with DALL-E
-3. **upload-metadata**: Token metadata management with Arweave/IPFS simulation
-4. **token-metadata**: Metaplex-compliant token metadata server
-5. **auth**: JWT-based authentication with Solana wallet signatures
-6. **health**: System health monitoring and diagnostics
+## Getting Started
 
-## Prerequisites
+To get started with this project, you will need to have the following installed:
 
-- [Supabase CLI](https://supabase.com/docs/guides/cli)
-- [Deno](https://deno.land/)
-- Supabase project with the following secrets configured:
-  - `SOLANA_RPC_URL`: Solana RPC endpoint
-  - `SOLANA_PRIVATE_KEY`: Base58-encoded private key for token operations
-  - `OPENAI_API_KEY`: OpenAI API key for image generation
-  - `JWT_SECRET`: Secret for JWT token signing
+-   [Node.js](https://nodejs.org/en/)
+-   [Yarn](https://yarnpkg.com/) (or [npm](https://www.npmjs.com/))
 
-## Local Development
+You will also need to have a Phantom wallet installed in your browser.
 
-1. Start the Supabase local development environment:
-   ```bash
-   supabase start
-   ```
+### Installation
 
-2. Set up environment variables in the Supabase project:
-   ```bash
-   supabase secrets set SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-   supabase secrets set SOLANA_PRIVATE_KEY=your_base58_private_key
-   supabase secrets set OPENAI_API_KEY=your_openai_key
-   supabase secrets set JWT_SECRET=your_jwt_secret
-   ```
+1.  Clone the repository:
 
-3. Start the Edge Functions in development mode:
-   ```bash
-   supabase functions serve --env-file .env.local
-   ```
+    ```bash
+    git clone https://github.com/your-username/solmeme-creator.git
+    ```
 
-## Database Setup
+2.  Install the dependencies:
 
-The project uses several tables in Supabase PostgreSQL:
+    ```bash
+    cd solmeme-creator
+    yarn install
+    ```
 
-1. `tokens`: Stores token creation records
-2. `sessions`: Manages authentication sessions
-3. `images`: Tracks generated images
-4. `metadata`: Stores token metadata
+### Configuration
 
-Apply the database migrations:
+1.  Create a `.env.local` file in the root of the project.
+2.  Add the following environment variables to the `.env.local` file:
+
+    ```
+    SUPABASE_URL=your_supabase_url
+    SUPABASE_ANON_KEY=your_supabase_anon_key
+    OPENAI_API_KEY=your_openai_api_key
+    ```
+
+    You can get your Supabase URL and anonymous key from your Supabase project settings. You can get your OpenAI API key from the [OpenAI website](https://beta.openai.com/signup/).
+
+### Running the Project
+
+To run the project in development mode, run the following command:
+
 ```bash
-supabase db reset
+yarn dev
 ```
+
+This will start the development server at `http://localhost:3000`.
 
 ## Deployment
 
-Deploy all functions to your Supabase project:
-```bash
-supabase functions deploy mint-token
-supabase functions deploy generate-image
-supabase functions deploy upload-metadata
-supabase functions deploy token-metadata
-supabase functions deploy auth
-supabase functions deploy health
-```
+To deploy the project, you can use a service like [Vercel](https://vercel.com/) or [Netlify](https://www.netlify.com/). You will need to configure the environment variables in your deployment settings.
 
-## Endpoints
+## Contributing
 
-### Mint Token
-- `POST /functions/v1/mint-token`
-  - Creates a new token on Solana blockchain
-  - Optional authority revocation parameters
-
-### Generate Image
-- `POST /functions/v1/generate-image`
-  - Generates AI token logo with DALL-E
-  - Falls back to placeholder if AI fails
-
-### Upload Metadata
-- `POST /functions/v1/upload-metadata`
-  - Stores token metadata for Metaplex compatibility
-- `GET /functions/v1/upload-metadata?id=[id]`
-  - Retrieves stored metadata
-
-### Token Metadata
-- `GET /functions/v1/token-metadata/[mintAddress]`
-  - Returns Metaplex-formatted metadata for tokens
-
-### Authentication
-- `POST /functions/v1/auth/challenge`
-  - Generates a challenge message for wallet signature
-- `POST /functions/v1/auth/login`
-  - Authenticates using wallet signature
-- `GET /functions/v1/auth/verify`
-  - Verifies authentication token
-- `POST /functions/v1/auth/logout`
-  - Ends user session
-
-### Health Check
-- `GET /functions/v1/health`
-  - Returns system health status
-
-## Frontend Integration
-
-The frontend should use the following sequence for token creation:
-
-1. Authenticate using wallet signature
-2. Generate AI image or upload custom logo
-3. Upload metadata
-4. Create token with optional authority settings
-5. Display token information
-
-## Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SOLANA_RPC_URL` | Solana RPC endpoint | Yes |
-| `SOLANA_PRIVATE_KEY` | Base58-encoded private key | Yes |
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `JWT_SECRET` | Secret for JWT signing | Yes |
-| `NODE_ENV` | Environment (development/production) | No |
-
-## Security Considerations
-
-- All endpoints are protected with proper CORS headers
-- Authentication via cryptographic wallet signatures
-- Authority revocation provides irreversible token security
-- JWT tokens with short expiration for session management
-
-## Monitoring
-
-Use the health endpoint to monitor system status:
-```
-GET /functions/v1/health
-```
-
-This will return the status of all dependencies and services.
+Contributions are welcome! If you would like to contribute to this project, please fork the repository and submit a pull request.
