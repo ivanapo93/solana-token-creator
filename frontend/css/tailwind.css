@@ -32,6 +32,8 @@ html {
 body {
   margin: 0;
   line-height: inherit;
+  background-color: #1a202c;
+  color: #edf2f7;
 }
 
 hr {
@@ -1932,9 +1934,36 @@ video {
   color: rgb(31 41 55 / var(--tw-text-opacity));
 }
 
-.text-gray-900 {
-  --tw-text-opacity: 1;
-  color: rgb(17 24 39 / var(--tw-text-opacity));
+.header {
+    text-align: center;
+    padding: 40px 20px;
+    background: #2d3748;
+    border-bottom: 1px solid #4a5568;
+}
+
+.header h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #edf2f7;
+}
+
+.header .subtitle {
+    font-size: 1.2rem;
+    opacity: 0.8;
+    margin-bottom: 20px;
+    color: #a0aec0;
+}
+
+.mainnet-features {
+    background: #4a5568;
+    color: #edf2f7;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 10px;
 }
 
 .text-red-500 {

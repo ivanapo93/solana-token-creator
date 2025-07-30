@@ -8,8 +8,8 @@ class AIGenerator {
     async generateTokenDetailsFromOpenAI(prompt) {
         const response = await this.openai.completions.create({
             model: "text-davinci-003",
-            prompt: `Generate a token name, symbol, and description for a meme coin based on the following concept: ${prompt}.`,
-            max_tokens: 100,
+            prompt: `Generate a creative and unique token name, symbol, and description for a meme coin based on the following concept: ${prompt}. The name should be catchy and memorable. The symbol should be short and relevant. The description should be funny and engaging.`,
+            max_tokens: 150,
         });
         const text = response.choices[0].text;
         const lines = text.split('\n');

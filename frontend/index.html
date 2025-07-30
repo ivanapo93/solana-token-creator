@@ -4,25 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SolMeme Creator - LIVE Solana Mainnet Token Creator</title>
-    
+
     <!-- Buffer Polyfill - MUST load first for Solana compatibility -->
     <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
 
     <!-- UI Libraries -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- AI SDK Scripts -->
     <script src="https://lib.youware.com/youware-ai-4.3.16.js"></script>
     <script src="https://lib.youware.com/youware-openai-1.3.22.js"></script>
     <script src="https://lib.youware.com/youware-zod-3.25.67.js"></script>
-    
+
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <!-- IPFS Configuration - MUST load before mainnet controller -->
     <script src="ipfs-config.js"></script>
-    
+
     <!-- Dexscreener Integration -->
     <script src="dexscreener-integration.js"></script>
 
@@ -56,7 +56,6 @@
         <span>Connecting to Mainnet...</span>
     </div>
 
-
     <!-- Main Content -->
     <div id="mainContent">
         <!-- Header -->
@@ -76,14 +75,14 @@
         <div class="wallet-section">
             <h3><i class="fas fa-wallet"></i> Connect Your Phantom Wallet to Mainnet</h3>
             <p style="margin-bottom: 20px; opacity: 0.8;">Connect your Phantom wallet to create REAL tokens on Solana mainnet with your SOL</p>
-            
 
-            
+
+
             <button id="connectWalletBtn" class="wallet-connect-btn" onclick="connectWallet()">
                 <img src="https://phantom.app/img/logo.png" alt="Phantom" style="width: 20px; height: 20px;">
                 Connect Phantom Wallet
             </button>
-            
+
             <div id="walletInfo" class="wallet-info">
                 <h4><i class="fas fa-check-circle"></i> Phantom Wallet Connected to Mainnet</h4>
                 <div class="wallet-address">
@@ -114,9 +113,9 @@
                 <div class="mainnet-warning">
                     ⚠️ PRODUCTION WARNING: This will create a REAL token on Solana mainnet using your real SOL balance. Minimum 0.01 SOL required.
                 </div>
-                
+
                 <h2><i class="fas fa-plus-circle"></i> Create Your Real Mainnet Token</h2>
-                
+
                 <!-- AI Mode Fields -->
                 <div class="ai-only">
                     <div class="form-group">
@@ -126,6 +125,7 @@
                             <i class="fas fa-magic"></i> Generate
                         </button>
                     </div>
+                    <div id="logoGallery" class="grid grid-cols-3 gap-4 mt-4"></div>
                 </div>
 
                 <!-- Manual Mode Fields -->
@@ -147,7 +147,6 @@
                 </div>
 
                 <!-- Common Fields -->
-
 
                 <div class="form-group manual-only">
                     <label><i class="fas fa-globe"></i> Website URL (Optional)</label>
@@ -172,10 +171,10 @@
                 <div class="form-section authority-section">
                     <h3><i class="fas fa-lock"></i> Authority Management (Optional)</h3>
                     <p class="authority-description">
-                        Revoking authorities makes your token more decentralized and trustworthy. 
+                        Revoking authorities makes your token more decentralized and trustworthy.
                         These settings are permanent and cannot be undone.
                     </p>
-                    
+
                     <div class="authority-checkboxes">
                         <div class="checkbox-group">
                             <input type="checkbox" id="revokeMintAuthority" name="revokeMintAuthority">
@@ -184,7 +183,7 @@
                                 <span class="checkbox-description">Prevents creating more tokens after launch</span>
                             </label>
                         </div>
-                        
+
                         <div class="checkbox-group">
                             <input type="checkbox" id="revokeFreezeAuthority" name="revokeFreezeAuthority">
                             <label for="revokeFreezeAuthority">
@@ -192,7 +191,7 @@
                                 <span class="checkbox-description">Prevents freezing/unfreezing token accounts</span>
                             </label>
                         </div>
-                        
+
                         <div class="checkbox-group">
                             <input type="checkbox" id="revokeUpdateAuthority" name="revokeUpdateAuthority">
                             <label for="revokeUpdateAuthority">
@@ -364,10 +363,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script src="index-mainnet.js"></script>
-
+    <script src="dist/bundle.js"></script>
 </body>
 </html>
-<button id="mintTokenBtn">Mint Token</button>
-<div id="mintStatus"></div>
