@@ -27,8 +27,8 @@ const NETWORK = 'mainnet-beta';
 let isUnlocked = false;
 
 // Supabase configuration
-const SUPABASE_URL = 'https://obbbcwkgctvfejsjmjrt.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9iYmJjd2tnY3R2ZmVqc2ptanJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYzMzU3MzMsImV4cCI6MjA1MTkxMTczM30.aApBJXJBb9-XU4b13fgf4rYAXTxz3tq5-0A0ySEKDqs';
+const SUPABASE_URL = getEnvVariable('SUPABASE_URL');
+const SUPABASE_KEY = getEnvVariable('SUPABASE_ANON_KEY');
 
 // Initialize Supabase client
 let supabase = null;
@@ -52,33 +52,6 @@ function clearAllState() {
     console.log('🧹 All cached state cleared for production reset');
 }
 
-// ==========================================
-// PASSWORD PROTECTION SYSTEM
-// ==========================================
-
-function checkPassword() {
-    const input = document.getElementById('passwordInput');
-    const error = document.getElementById('passwordError');
-    
-    if (input.value === SITE_PASSWORD) {
-        isUnlocked = true;
-        document.getElementById('passwordGate').classList.add('hidden');
-        document.getElementById('mainContent').classList.add('unlocked');
-        initializeProductionApp();
-    } else {
-        error.classList.add('show');
-        input.value = '';
-        input.focus();
-        setTimeout(() => error.classList.remove('show'), 3000);
-    }
-}
-
-function resetSitePassword() {
-    isUnlocked = false;
-    document.getElementById('passwordGate').classList.remove('hidden');
-    document.getElementById('mainContent').classList.remove('unlocked');
-    clearAllState();
-}
 
 // ==========================================
 // PRODUCTION APPLICATION INITIALIZATION
@@ -2248,55 +2221,3 @@ console.log('Development utilities: resetForm(), resetSitePassword(), checkNetwo
 // Make sure you have a button with id 'mintTokenBtn' in your HTML.
 // If you don't have it, I can help you add it too.
 
-document.getElementById('mintTokenBtn').addEventListener('click', async () => {
-  try {
-    // This is the data you send to your Supabase function
-    const dataToSend = {
-      wallet: window.solanaInstance.wallet.publicKey.toString(), // user wallet address
-      // add any other required fields here if needed
-    };
-
-    const response = await fetch('https://kseeiqbtxmvinscoarhw.supabase.co/functions/v1/dynamic-service', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToSend),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    alert('Token minted successfully!');
-    console.log('Mint result:', result);
-  } catch (error) {
-    alert('Mint failed: ' + error.message);
-    console.error('Error:', error);
-  }
-});
-document.getElementById('mintTokenBtn').addEventListener('click', async () => {
-  const mintStatus = document.getElementById('mintStatus');
-  mintStatus.textContent = 'Minting token... Please wait.';
-
-  try {
-    const response = await fetch('https://kseeiqbtxmvinscoarhw.supabase.co/functions/v1/dynamic-service', {
-      method: 'POST',  // Or 'GET' depending on your function
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        // Send any data your function needs here
-        // e.g. user wallet address or token metadata
-      }),
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-    const data = await response.json();
-    mintStatus.textContent = 'Token minted successfully! ID: ' + data.tokenId;  // Adapt based on your response
-  } catch (error) {
-    mintStatus.textContent = 'Minting failed: ' + error.message;
-  }
-});
