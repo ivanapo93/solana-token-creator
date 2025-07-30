@@ -94,7 +94,7 @@ app.use('/api/tokens/create', strictLimiter);
 // ================================
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, 'https://solana-token-creatorivan.netlify.app']
+    ? [process.env.FRONTEND_URL, 'https://yourdomain.com']
     : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8000'],
   credentials: true,
   optionsSuccessStatus: 200,
@@ -123,12 +123,10 @@ app.use('/api/tokens', tokenRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/telegram', telegramRoutes);
 
-if (process.env.NODE_ENV === 'production') {
-  // Serve frontend
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
-}
+// Serve frontend
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
 
 // API documentation endpoint
 app.get('/api', (req, res) => {

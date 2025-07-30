@@ -1,3 +1,15 @@
+import {
+    AIGenerator
+} from './lib/ai-generator.js';
+import {
+    Storage
+} from './lib/storage.js';
+import {
+    OnChainData
+} from './lib/on-chain-data.js';
+import {
+    Dexscreener
+} from './lib/dexscreener.js';
 const analytics = new Analytics();
 
 // Initialize Buffer polyfill before anything else
@@ -270,7 +282,9 @@ async function loadDependencies() {
     }
 }
 
-loadDependencies();
+loadDependencies().then(() => {
+    window.solanaInstance = new SolanaIntegration();
+});
 
 // Supabase Edge Functions Integration
 // Supabase Edge Function Endpoints - Updated with your project reference
@@ -626,7 +640,6 @@ async function createNewToken(formData) {
         if (formData.twitterUrl) socialLinks.twitter = formData.twitterUrl;
         if (formData.telegramUrl) socialLinks.telegram = formData.telegramUrl;
         if (formData.discordUrl) socialLinks.discord = formData.discordUrl;
-        if (formData.discordUrl) socialLinks.discord = formData.discordUrl;
 
         if (Object.keys(socialLinks).length > 0) {
             // Add to main metadata
@@ -779,8 +792,12 @@ function handleTokenCreation() {
 
 // Update progress bar and text
 function updateProgress(percentage, text, subtext = '') {
-    document.getElementById('progressFill').style.width = percentage + '%';
-    document.getElementById('progressText').innerText = text;
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    progressFill.style.width = `${percentage}%`;
+    progressText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+
     if (subtext) {
         let subtextElement = document.getElementById('progressSubtext');
         if (!subtextElement) {
@@ -903,11 +920,13 @@ async function displayResults(tokenResult) {
 
 // Show error message
 function showError(message, showRetry = false) {
-    document.getElementById('progressSection').classList.remove('active');
     const errorPanel = document.getElementById('errorPanel');
-    errorPanel.classList.add('show');
-    document.getElementById('errorMessage').innerText = message || 'An unexpected error occurred';
+    const errorMessage = document.getElementById('errorMessage');
     const retryBtn = document.getElementById('retryBtn');
+
+    errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message || 'An unexpected error occurred'}`;
+    errorPanel.classList.add('show');
+
     if (showRetry) {
         retryBtn.style.display = 'block';
     } else {
@@ -1023,13 +1042,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const {
+            AIGenerator
+        } = await import('./lib/ai-generator.js');
         const aiGenerator = new AIGenerator(getEnvVariable('OPENAI_API_KEY'));
         const tokenDetails = await aiGenerator.generateTokenDetails(concept);
-        const tokenLogoUrl = await aiGenerator.generateTokenLogo(tokenDetails.name, tokenDetails.description);
 
         document.getElementById('tokenName').value = tokenDetails.name;
         document.getElementById('tokenSymbol').value = tokenDetails.symbol;
         document.getElementById('tokenDescription').value = tokenDetails.description;
+
+        const logoGallery = document.getElementById('logoGallery');
+        logoGallery.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const tokenLogoUrl = await aiGenerator.generateTokenLogo(tokenDetails.name, tokenDetails.description);
+            const img = document.createElement('img');
+            img.src = tokenLogoUrl;
+            img.className = 'w-full h-auto cursor-pointer';
+            img.onclick = () => selectLogo(tokenLogoUrl);
+            logoGallery.appendChild(img);
+        }
+    }
+
+    function selectLogo(logoUrl) {
+        document.getElementById('logoUrl').value = logoUrl;
+        const logoGallery = document.getElementById('logoGallery');
+        logoGallery.innerHTML = `<img src="${logoUrl}" class="w-full h-auto">`;
     }
 
     document.getElementById('generateAIConceptBtn').addEventListener('click', generateAIConcept);
@@ -1284,12 +1322,12 @@ async function connectWallet() {
         return walletAddress;
     } catch (error) {
         console.error('Failed to connect wallet:', error);
+        let message = 'Failed to connect to Phantom wallet. Please try again.';
         if (error.code === 4001) {
             // User rejected the connection
-            alert('Please approve the connection request in your Phantom wallet.');
-        } else {
-            alert('Failed to connect to Phantom wallet: ' + error.message);
+            message = 'Please approve the connection request in your Phantom wallet.';
         }
+        showError(message, true);
         throw error;
     }
 }
